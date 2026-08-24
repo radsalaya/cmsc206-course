@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 1 &middot; Fundamental DBMS Concepts &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic1">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 1</p>
+  <h1>Fundamental<br>DBMS Concepts</h1>
+  <p class="hero__lede">Why we don&rsquo;t just keep our data in files &mdash; and what a database management system gives us instead.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>8</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic1</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#database" class="rail__link"><span>02</span> Database (DB)</a></li>
+      <li><a href="#dbms" class="rail__link"><span>03</span> DBMS</a></li>
+      <li><a href="#system" class="rail__link"><span>04</span> Database System</a></li>
+      <li><a href="#filesystem" class="rail__link"><span>05</span> DB without DBMS</a></li>
+      <li><a href="#acid" class="rail__link"><span>06</span> ACID &amp; BASE</a></li>
+      <li><a href="#abstraction" class="rail__link"><span>07</span> Abstraction</a></li>
+      <li><a href="#types" class="rail__link"><span>08</span> Types of DBMS</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- 01 INTRODUCTION -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>In this lecture, we will:</p>
+          <ul class="list">
+            <li>Define what a <strong>Database Management System (DBMS)</strong> is;</li>
+            <li>Discuss <strong>what</strong> they are and <strong>why</strong> we use them;</li>
+            <li>Explain the <strong>abstraction levels</strong> offered by a DBMS; and</li>
+            <li>Explore <strong>examples</strong> of modern DBMSes.</li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Definition of DB and DBMS</li>
+            <li>DBMS levels of abstraction</li>
+            <li>ACID properties</li>
+            <li>Types of DBMS</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 02 DATABASE -->
+    <section id="database" class="section">
+      <p class="section__num">02</p>
+      <h2>Database (DB)</h2>
+
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>A DB is a collection of <mark>related</mark> data, facts about a particular world or process, with <mark>meaning</mark>, a <mark>purpose</mark> and <mark>target users</mark>.</p>
+      </div>
+
+      <ul class="list">
+        <li>As you can see, this is a very broad definition&hellip;</li>
+        <li>Data takes many forms: numbers, text, images, sounds, video, etc.</li>
+        <li>Note that <strong>any random collection of data is not a DB.</strong></li>
+      </ul>
+
+      <h3 class="sub">Database examples</h3>
+      <p class="hint">Tap a card to see the data it holds.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Personal address book</span>
+          <span class="card__sub">one&rsquo;s contacts&rsquo; information</span>
+          <span class="card__data"><em>data:</em> name, address, phone number</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Student records</span>
+          <span class="card__sub">a school&rsquo;s enrolled learners</span>
+          <span class="card__data"><em>data:</em> name, address, phone number, birthdate, grades</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Bank records</span>
+          <span class="card__sub">accounts and their movements</span>
+          <span class="card__data"><em>data:</em> name, address, phone number, transactions, account balance</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Online retailer&rsquo;s catalog</span>
+          <span class="card__sub">everything on sale</span>
+          <span class="card__data"><em>data:</em> product name, description, price, photo</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- 03 DBMS -->
+    <section id="dbms" class="section">
+      <p class="section__num">03</p>
+      <h2>Database Management Systems</h2>
+
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>A DBMS is a software system that enables users to <mark>create</mark>, <mark>maintain</mark>, and <mark>exploit</mark> a database.</p>
+      </div>
+
+      <p>It allows users to:</p>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Define the DB</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Specify the structure of the database, the data that will be stored, its type and constraints. This constitutes the <strong>metadata</strong> of our data.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Construct the DB</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Insert the data in the database and store it durably.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Manipulate the DB</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Retrieve and update data from the database.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">Share the DB</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Allow multiple users to use the database concurrently.</p></div>
+        </div>
+      </div>
+
+      <h3 class="sub">DBMS examples</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct — spreadsheets store data, but they don't define, protect, or share it the way a DBMS does."
+           data-no="Not quite. The three spreadsheet tools are the only non-DBMS in this list.">
+        <p class="activity__prompt">Three of these are not a DBMS. Tap the impostors, then check your answer.</p>
+        <div class="chips">
+          <button class="chip" type="button">Microsoft Access</button>
+          <button class="chip" type="button">MySQL</button>
+          <button class="chip" type="button" data-correct="true">Microsoft Excel</button>
+          <button class="chip" type="button">PostgreSQL</button>
+          <button class="chip" type="button" data-correct="true">Google Sheets</button>
+          <button class="chip" type="button">Redis</button>
+          <button class="chip" type="button">MongoDB</button>
+          <button class="chip" type="button" data-correct="true">LibreOffice Calc</button>
+          <button class="chip" type="button">Neo4J</button>
+          <button class="chip" type="button">SQLite</button>
+          <button class="chip" type="button">Amazon DynamoDB</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+      <p class="callout callout--warn"><strong>Spreadsheet software</strong> (e.g. Excel, Google Sheets, LibreOffice Calc) are <strong>not</strong> a DBMS.</p>
+    </section>
+
+    <!-- 04 DATABASE SYSTEM -->
+    <section id="system" class="section">
+      <p class="section__num">04</p>
+      <h2>Database System</h2>
+      <p class="equation"><b>Database System</b> = Database + Database Management System</p>
+
+      <figure class="figure">
+        <div class="dbsys">
+          <p class="dbsys__actor">Users / Programmers</p>
+          <div class="dbsys__arrow" aria-hidden="true"></div>
+          <div class="dbsys__outer">
+            <p class="dbsys__label">Database System</p>
+            <div class="dbsys__box">Application Programs / Queries</div>
+            <div class="dbsys__arrow" aria-hidden="true"></div>
+            <div class="dbsys__inner">
+              <p class="dbsys__label">DBMS Software</p>
+              <div class="dbsys__box">Software to Process Queries / Programs</div>
+              <div class="dbsys__arrow" aria-hidden="true"></div>
+              <div class="dbsys__box">Software to Access Stored Data</div>
+            </div>
+            <div class="dbsys__arrow" aria-hidden="true"></div>
+            <div class="dbsys__stores">
+              <div class="cyl">Stored Database Definition<br><span>(Meta-Data)</span></div>
+              <div class="cyl">Stored Database</div>
+            </div>
+          </div>
+        </div>
+        <figcaption><strong>Figure 2:</strong> A simplified database system. <span class="src">After Figure 1.1 in <em>Fundamentals of Database Systems</em>, Elmasri and Navathe.</span></figcaption>
+      </figure>
+    </section>
+
+    <!-- 05 FILESYSTEM -->
+    <section id="filesystem" class="section">
+      <p class="section__num">05</p>
+      <h2>DB without DBMS</h2>
+      <p>If a DB is just a coherent collection of data, why do we need a DBMS? Why not just keep our data in files that we format in an ad-hoc way and organise them through the directory tree and filenames?</p>
+      <p>If we take the example of a university, we have:</p>
+      <ul class="list">
+        <li>The student records system works with <code>/school/program/year/student_name_grades.csv</code> files, where each line records a class taken and the grade obtained.</li>
+        <li>The financial office&rsquo;s system works with <code>/school/program/year/student_name_fees.csv</code> files, where each line records a transaction on the account of the student.</li>
+        <li>The PR system works with <code>/school/program/year.csv</code> files, where each line records a student name and their contact info.</li>
+      </ul>
+
+      <figure class="figure">
+        <div class="tree-head">
+          <p class="hint">Expand the folders to walk the tree.</p>
+          <button class="btn btn--small" type="button" data-highlight="#fsTree" data-label-on="Hide repeated names" aria-pressed="false">Highlight repeated names</button>
+        </div>
+        <div class="tree" id="fsTree">
+          <ul class="tree__root">
+            <li>
+              <button class="tree__node" type="button" aria-expanded="true">Root</button>
+              <ul>
+                <li>
+                  <button class="tree__node" type="button" aria-expanded="true">Computer&nbsp;Science</button>
+                  <ul>
+                    <li>
+                      <button class="tree__node" type="button" aria-expanded="true">Master</button>
+                      <ul>
+                        <li>
+                          <button class="tree__node" type="button" aria-expanded="true">2018</button>
+                          <ul>
+                            <li><p class="tree__file"><span class="fname">christophe_morrish_fees.csv</span><span class="frow">2018/09/01,fees,-1000</span><span class="frow">2018/09/02,payment,+500</span></p></li>
+                            <li><p class="tree__file"><span class="fname">christophe_morrish_grades.csv</span><span class="frow">CMSC204,1.0</span><span class="frow">CMSC206,1.0</span></p></li>
+                          </ul>
+                        </li>
+                        <li><p class="tree__file"><span class="fname">2018.csv</span><span class="frow"><b class="dup">Christophe,Morrish</b>,c.morrish@univ.edu</span><span class="frow">Ornat,Royson,o.royson@univ.edu</span></p></li>
+                      </ul>
+                    </li>
+                    <li><button class="tree__node" type="button" aria-expanded="false">Bachelor</button><ul><li><p class="tree__file"><span class="frow">&hellip;</span></p></li></ul></li>
+                  </ul>
+                </li>
+                <li><button class="tree__node" type="button" aria-expanded="false">Engineering</button><ul><li><p class="tree__file"><span class="frow">Master &middot; Bachelor &hellip;</span></p></li></ul></li>
+                <li>
+                  <button class="tree__node" type="button" aria-expanded="false">Psychology</button>
+                  <ul>
+                    <li>
+                      <button class="tree__node" type="button" aria-expanded="true">Master &rsaquo; 2018</button>
+                      <ul>
+                        <li><p class="tree__file"><span class="fname">irwin_love_fees.csv</span><span class="frow">2018/09/01,fees,-1000</span></p></li>
+                        <li><p class="tree__file"><span class="fname">irwin_love_grades.csv</span><span class="frow">PSY101,1.0</span><span class="frow">PSY102,2.0</span></p></li>
+                        <li><p class="tree__file"><span class="fname">2018.csv</span><span class="frow"><b class="dup">Irwin,Love</b>,i.love@univ.edu</span></p></li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <figcaption><strong>Figure 3:</strong> A school managing everything through the file system.</figcaption>
+      </figure>
+
+      <h3 class="sub">Drawbacks of storing data using a filesystem</h3>
+      <div class="drawbacks">
+        <article><h4>Data redundancy</h4><p><em>student_name</em> appeared in three (3) different places. We are wasting storage.</p></article>
+        <article><h4>Risk of inconsistency</h4><p>What happens if one person is recorded as Thomas in the student records and Tomas in the financial system? What happens if my PC crashes while I am modifying a file?</p></article>
+        <article><h4>No concurrency control</h4><p>What happens if two people modify fees records at the same time? Will one&rsquo;s modification override someone else&rsquo;s?</p></article>
+        <article><h4>Low flexibility</h4><p>The format of the data cannot be easily changed. We can only use ad-hoc programs to process the data as there are no standard formats.</p></article>
+      </div>
+    </section>
+
+    <!-- 06 ACID -->
+    <section id="acid" class="section">
+      <p class="section__num">06</p>
+      <h2>We want ACID</h2>
+      <p>What we are missing, and that a DBMS provides to different degrees, is the ACID properties. Tap a letter to read it in full.</p>
+
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>A</b>tomicity</span>
+          <span class="quad__short">All or no transactions are committed</span>
+          <span class="quad__long">Every operation or group of operations, called a <strong>transaction</strong>, should be completely executed or not be executed at all. It follows the all-or-nothing principle. For example, we cannot take money from a bank and not credit it somewhere else.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>C</b>onsistency</span>
+          <span class="quad__short">Transaction completes or previous state is returned</span>
+          <span class="quad__long">Every transaction in the DB will bring it from a valid state to another valid state with regards to the constraints put on the data.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>I</b>solation</span>
+          <span class="quad__short">Transactions are isolated from each other</span>
+          <span class="quad__long">If transactions are executed concurrently on the DB, they will have the same effect as if they were run in sequence and not interfere with one another.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>D</b>urability</span>
+          <span class="quad__short">Completed transaction is saved securely</span>
+          <span class="quad__long">Once a transaction is committed, it will stay committed, even after a system failure.</span>
+        </button>
+      </div>
+
+      <h3 class="sub">But BASE works in some cases too</h3>
+      <div class="toggle" role="tablist" aria-label="ACID or BASE">
+        <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="panelAcid">ACID</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="panelBase">BASE</button>
+      </div>
+      <div class="panel" id="panelAcid" role="tabpanel">
+        <p class="panel__lede">Strict consistency and reliability &mdash; the guarantee you want when the data is money.</p>
+        <ul class="list">
+          <li><strong>Atomicity</strong> &mdash; all or nothing.</li>
+          <li><strong>Consistency</strong> &mdash; valid state to valid state.</li>
+          <li><strong>Isolation</strong> &mdash; concurrent transactions don&rsquo;t interfere.</li>
+          <li><strong>Durability</strong> &mdash; committed stays committed.</li>
+        </ul>
+        <p class="panel__use">Typical use: <strong>banking.</strong></p>
+      </div>
+      <div class="panel is-hidden" id="panelBase" role="tabpanel">
+        <p class="panel__lede">BASE is an alternative to ACID, common in <strong>NoSQL databases</strong> (e.g. MongoDB, Cassandra, DynamoDB).</p>
+        <ul class="list">
+          <li><strong>Basically Available</strong> &mdash; the system guarantees availability, but may return stale data.</li>
+          <li><strong>Soft state</strong> &mdash; the state of the system may change over time, even without new input, due to replication and background processes.</li>
+          <li><strong>Eventual consistency</strong> &mdash; the system will become consistent if given enough time, though temporary inconsistencies are allowed.</li>
+        </ul>
+        <p class="panel__use">Typical use: <strong>e-commerce, social media</strong> &mdash; speed, scalability, high availability.</p>
+      </div>
+    </section>
+
+    <!-- 07 ABSTRACTION -->
+    <section id="abstraction" class="section">
+      <p class="section__num">07</p>
+      <h2>Abstraction through the DBMS</h2>
+      <p>To allow us to achieve ACID properties, the DBMS provides different abstractions. There are three levels of abstraction, which should work independently &mdash; we could change the way we implement one level without impacting the others.</p>
+
+      <figure class="figure">
+        <div class="stack" data-detail-target="#lvlDetail">
+          <div class="stack__views">
+            <button class="lvl" type="button" data-detail="lvl-view1" aria-expanded="false">View 1</button>
+            <button class="lvl" type="button" data-detail="lvl-view2" aria-expanded="false">View 2</button>
+          </div>
+          <button class="lvl lvl--wide" type="button" data-detail="lvl-conceptual" aria-expanded="false">Conceptual Level</button>
+          <button class="lvl lvl--wide" type="button" data-detail="lvl-physical" aria-expanded="false">Physical Level</button>
+        </div>
+        <div class="detail" id="lvlDetail" role="status">
+          <p class="hint">Tap a level in the diagram to see what it hides and who cares about it.</p>
+        </div>
+        <figcaption><strong>Figure 4:</strong> The three levels of abstraction.</figcaption>
+      </figure>
+
+      <!-- detail sources for the diagram above -->
+      <div hidden>
+        <div id="lvl-view1">
+          <h4>View level</h4>
+          <p>The details of the data types are hidden. Different views are created depending on your accessible data. Your boss may view your salary but you may not view his, for example.</p>
+          <p class="detail__who">Who cares: the end user, who is just interested in browsing the data.</p>
+        </div>
+        <div id="lvl-view2">
+          <h4>View level</h4>
+          <p>Two users can look at the same database through completely different windows. Each view exposes only the data that user is allowed to see.</p>
+          <p class="detail__who">Who cares: the end user, who is just interested in browsing the data.</p>
+        </div>
+        <div id="lvl-conceptual">
+          <h4>Logical / Conceptual level</h4>
+          <p>We ask: what data is being stored? What is the type of the data? How are different data items related &mdash; e.g. the &rdquo;lecturer&rdquo; item in the record for a class must be a &rdquo;person&rdquo; record? Who can access what part of the data?</p>
+          <p class="detail__who">Who cares: the programmer building something on top of the DB.</p>
+        </div>
+        <div id="lvl-physical">
+          <h4>Physical level</h4>
+          <p>How the data is stored on disk. Here we consider file formats, encoding, and so on. This is usually handled 100% by the DBMS.</p>
+          <p class="detail__who">Who cares: the DBMS administrator, interested in how files are saved to disk.</p>
+        </div>
+      </div>
+
+      <p>Each level is a higher-level abstraction of the data, and each is of concern to different people. The DBMS administrator is interested in how the files are saved to disk. A programmer building something on top of the DB is interested in the data types but not in how the data is actually stored. The end user is just interested in browsing the data.</p>
+    </section>
+
+    <!-- 08 TYPES -->
+    <section id="types" class="section">
+      <p class="section__num">08</p>
+      <h2>Types of DBMS</h2>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">Focus of this course</p>
+          <h3>Relational (RDBMS)</h3>
+          <p>Data is very structured into tables and columns with strong constraints on them. ACID properties are strongly enforced.</p>
+        </article>
+        <article class="type">
+          <h3>Object oriented (OODB)</h3>
+          <p>Simplifies the interaction between object-oriented programming languages and relational databases. Objects can be saved into and retrieved directly from the DB.</p>
+        </article>
+        <article class="type">
+          <h3>NoSQL</h3>
+          <p>Emerged with Big Data. Much faster than RDBMS but ACID is sometimes relaxed. E.g. key/value stores, column stores, document stores, graph databases.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- SUMMARY -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li>A <strong>Database (DB)</strong> is a structured collection of related data with meaning and purpose.</li>
+        <li>A <strong>Database Management System (DBMS)</strong> lets us define, construct, manipulate, and share data.</li>
+        <li>Managing data through plain files leads to <strong>redundancy, inconsistency,</strong> and <strong>lack of concurrency control.</strong></li>
+        <li><strong>ACID properties</strong> ensure reliability in traditional databases: Atomicity, Consistency, Isolation, Durability.</li>
+        <li><strong>BASE properties</strong> (in many NoSQL systems) trade strict consistency for availability and scalability.</li>
+        <li>A DBMS provides <strong>three levels of abstraction</strong>: physical, logical, and view levels.</li>
+        <li>Types of DBMS include <strong>Relational (RDBMS)</strong>, <strong>Object-Oriented</strong>, and <strong>NoSQL</strong>.</li>
+      </ul>
+    </section>
+
+    <!-- CHECK YOUR UNDERSTANDING -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <span class="pager__spacer"></span>
+      <a href="topic2.html">Topic 2 &rarr;</a>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Fundamental DBMS Concepts,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Figure 2 after Figure 1.1 in <em>Fundamentals of Database Systems</em>, Elmasri and Navathe.</p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "A folder on your laptop holds 500 unrelated screenshots, memes, and receipts. Why is this not a database?",
+    "options": [
+      "It is stored on a laptop instead of a server.",
+      "The data is not related and has no shared meaning, purpose, or target users.",
+      "It contains images, and databases can only store text and numbers.",
+      "It is smaller than the minimum size required for a database."
+    ],
+    "answer": 1,
+    "why": "A DB is a collection of <em>related</em> data with meaning, a purpose, and target users. Any random collection of data is not a DB &mdash; and data can take many forms: numbers, text, images, sounds, video."
+  },
+  {
+    "stem": "Which of the following is NOT a DBMS?",
+    "options": ["SQLite", "Neo4J", "LibreOffice Calc", "Amazon DynamoDB"],
+    "answer": 2,
+    "why": "Spreadsheet software (Excel, Google Sheets, LibreOffice Calc) is not a DBMS. SQLite, Neo4J, and DynamoDB all are."
+  },
+  {
+    "stem": "A developer specifies the tables, the data types of each column, and the constraints on them. Which DBMS capability is this, and what does it produce?",
+    "options": [
+      "Construct the DB &mdash; it produces the stored records.",
+      "Manipulate the DB &mdash; it produces query results.",
+      "Share the DB &mdash; it produces user accounts.",
+      "Define the DB &mdash; it produces the metadata."
+    ],
+    "answer": 3,
+    "why": "Defining the DB means specifying its structure, the data that will be stored, its type and constraints. This constitutes the <strong>metadata</strong> of our data."
+  },
+  {
+    "stem": "In the university filesystem example, a student's name appears in the grades file, the fees file, and the PR contact file. Which drawback does this illustrate?",
+    "options": ["Data redundancy", "Low flexibility", "Risk of inconsistency", "No concurrency control"],
+    "answer": 0,
+    "why": "The same <em>student_name</em> appearing in three different places is <strong>data redundancy</strong> &mdash; we are wasting storage. It also creates the <em>risk</em> of inconsistency, but the repetition itself is redundancy."
+  },
+  {
+    "stem": "Two staff members open the same fees .csv file at the same time and both save their edits. One person's changes silently disappear. Which drawback of the filesystem approach is this?",
+    "options": [
+      "Data redundancy",
+      "No concurrency control",
+      "Low flexibility",
+      "Insufficient disk space"
+    ],
+    "answer": 1,
+    "why": "With plain files there is nothing coordinating simultaneous writers, so one modification can override someone else's. A DBMS handles this &mdash; it lets multiple users share the database concurrently."
+  },
+  {
+    "stem": "A bank transfer debits &#8369;1,000 from one account but the system crashes before crediting the other. Which ACID property was violated?",
+    "options": ["Durability", "Isolation", "Atomicity", "Consistency"],
+    "answer": 2,
+    "why": "Atomicity follows the all-or-nothing principle: a transaction is completely executed or not executed at all. We cannot take money from a bank and not credit it somewhere else."
+  },
+  {
+    "stem": "The server loses power one second after a transaction is committed. When it restarts, the change is still there. Which ACID property guarantees this?",
+    "options": ["Durability", "Atomicity", "Isolation", "Consistency"],
+    "answer": 0,
+    "why": "Durability: once a transaction is committed, it will stay committed, even after a system failure."
+  },
+  {
+    "stem": "Which statement best describes the BASE model?",
+    "options": [
+      "It enforces ACID more strictly than relational systems do.",
+      "It guarantees availability, allows the state to drift, and becomes consistent eventually.",
+      "It replaces transactions with file locking at the operating-system level.",
+      "It is the storage format used by spreadsheet software."
+    ],
+    "answer": 1,
+    "why": "BASE = <strong>B</strong>asically <strong>A</strong>vailable (may return stale data), <strong>S</strong>oft state (state may change without new input), <strong>E</strong>ventual consistency. It is common in NoSQL databases such as MongoDB, Cassandra, and DynamoDB."
+  },
+  {
+    "stem": "Your manager can see your salary in the payroll system, but you cannot see hers. Which level of abstraction is at work?",
+    "options": ["Physical level", "Logical / conceptual level", "View level", "Transaction level"],
+    "answer": 2,
+    "why": "At the view level the details of the data types are hidden and different views are created depending on the data you can access."
+  },
+  {
+    "stem": "Which pairing of DBMS type and description is correct?",
+    "options": [
+      "NoSQL &mdash; data is highly structured into tables with strongly enforced ACID properties.",
+      "Relational (RDBMS) &mdash; objects are saved into and retrieved directly from the DB.",
+      "Object oriented (OODB) &mdash; emerged with Big Data and relaxes ACID for speed.",
+      "Relational (RDBMS) &mdash; data is structured into tables and columns with strong constraints, and ACID is strongly enforced."
+    ],
+    "answer": 3,
+    "why": "RDBMS is the focus of this course: structured tables and columns, strong constraints, ACID strongly enforced. OODB lets objects be stored and retrieved directly; NoSQL emerged with Big Data and sometimes relaxes ACID."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

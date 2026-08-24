@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  LESSON TEMPLATE — CMSC 206
+  ============================================================
+  How to use:
+    1. Copy this file into lessons/ and rename it (e.g. topic2.html).
+    2. Replace every {{PLACEHOLDER}} and the sample sections.
+    3. Rewrite the #quizData block at the bottom — 10 items.
+    4. Update the .pager links at the end.
+
+  Asset paths assume the file lives in lessons/. If you keep the
+  template at the repo root, it will look unstyled until you
+  move it — that is expected.
+
+  Component cheat sheet (all styles live in assets/style.css):
+    .definition        boxed definition with a maroon rule
+    .callout--warn     maroon warning box
+    .callout--note     green note box
+    .cards > .card     tap-to-reveal cards      (needs data-reveal)
+    .accordion > .acc  numbered expandable list
+    [data-activity]    tap-the-odd-ones-out activity
+    .quad              2x2 grid of reveal cells (needs data-reveal)
+    .toggle + .panel   tabbed comparison
+    .stack + .detail   clickable diagram with a detail panel
+    .drawbacks         2-up cards with a maroon edge
+    .types             3-up cards
+    .summary           gold-bulleted recap list
+    .tree              expandable file tree
+  ============================================================
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic {{N}} &middot; {{LESSON TITLE}} &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic{{N}}">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic {{N}}</p>
+  <h1>{{LESSON TITLE}}</h1>
+  <p class="hero__lede">{{One sentence on what this topic is really about.}}</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>{{N}}</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <!-- Rail: one <li> per section. href must match the section id. -->
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic{{N}}</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#section2" class="rail__link"><span>02</span> {{Section name}}</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ INTRODUCTION ============ -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>In this lecture, we will:</p>
+          <ul class="list">
+            <li>{{Objective one}}</li>
+            <li>{{Objective two}}</li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>{{Key idea}}</li>
+            <li>{{Key idea}}</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ A CONTENT SECTION ============ -->
+    <section id="section2" class="section">
+      <p class="section__num">02</p>
+      <h2>{{Section name}}</h2>
+
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>{{Definition text, with <mark>key terms</mark> marked.}}</p>
+      </div>
+
+      <ul class="list">
+        <li>{{Supporting point.}}</li>
+      </ul>
+
+      <!-- Tap-to-reveal cards -->
+      <h3 class="sub">{{Examples}}</h3>
+      <p class="hint">Tap a card to see more.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">{{Card title}}</span>
+          <span class="card__sub">{{Short subtitle}}</span>
+          <span class="card__data">{{Hidden detail revealed on tap}}</span>
+        </button>
+      </div>
+
+      <!-- Numbered accordion -->
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">{{Item name}}</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>{{Explanation.}}</p></div>
+        </div>
+      </div>
+
+      <!-- Tap-the-odd-ones-out activity.
+           Mark every chip the learner SHOULD tap with data-correct="true". -->
+      <div class="activity" data-activity="pick"
+           data-ok="{{Message when they get it right.}}"
+           data-no="{{Message when they don't.}}">
+        <p class="activity__prompt">{{Instruction, e.g. Tap the ones that are NOT X.}}</p>
+        <div class="chips">
+          <button class="chip" type="button">{{Wrong to tap}}</button>
+          <button class="chip" type="button" data-correct="true">{{Right to tap}}</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+
+      <p class="callout callout--note">{{Optional note box.}}</p>
+    </section>
+
+    <!-- ============ OPTIONAL: 2x2 REVEAL GRID ============ -->
+    <!--
+    <div class="quad">
+      <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+        <span class="quad__word"><b>X</b>-word</span>
+        <span class="quad__short">{{One-line gloss}}</span>
+        <span class="quad__long">{{Full explanation}}</span>
+      </button>
+    </div>
+    -->
+
+    <!-- ============ OPTIONAL: TABBED COMPARISON ============ -->
+    <!--
+    <div class="toggle" role="tablist" aria-label="{{A or B}}">
+      <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="panelA">{{A}}</button>
+      <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="panelB">{{B}}</button>
+    </div>
+    <div class="panel" id="panelA" role="tabpanel">{{...}}</div>
+    <div class="panel is-hidden" id="panelB" role="tabpanel">{{...}}</div>
+    -->
+
+    <!-- ============ OPTIONAL: CLICKABLE DIAGRAM ============ -->
+    <!--
+    <figure class="figure">
+      <div class="stack" data-detail-target="#myDetail">
+        <button class="lvl lvl--wide" type="button" data-detail="d-one" aria-expanded="false">{{Part one}}</button>
+        <button class="lvl lvl--wide" type="button" data-detail="d-two" aria-expanded="false">{{Part two}}</button>
+      </div>
+      <div class="detail" id="myDetail" role="status">
+        <p class="hint">Tap a part of the diagram to read about it.</p>
+      </div>
+      <figcaption><strong>Figure N:</strong> {{Caption.}}</figcaption>
+    </figure>
+    <div hidden>
+      <div id="d-one"><h4>{{Title}}</h4><p>{{Body}}</p><p class="detail__who">{{Who cares}}</p></div>
+      <div id="d-two"><h4>{{Title}}</h4><p>{{Body}}</p></div>
+    </div>
+    -->
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li>{{Recap point one.}}</li>
+        <li>{{Recap point two.}}</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <!-- Leave this block as-is; only the JSON at the bottom changes. -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="topic{{N-1}}.html">&larr; Topic {{N-1}}</a>
+      <a href="topic{{N+1}}.html">Topic {{N+1}} &rarr;</a>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;{{Lesson title}},&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">{{Any figure credits.}}</p>
+    </footer>
+
+  </main>
+</div>
+
+<!--
+  ===== Check Your Understanding: question bank =====
+  Ten objects. "answer" is the ZERO-BASED index of the correct option
+  (0 = first option). "why" is shown after answering and may contain
+  simple HTML. Vary which position the correct answer sits in.
+-->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "{{Question 1 — describe a situation rather than asking for a definition.}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 0,
+    "why": "{{Explain why the key is right, and why the tempting distractor isn't.}}"
+  },
+  {
+    "stem": "{{Question 2}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 1,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 3}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 2,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 4}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 3,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 5}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 0,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 6}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 1,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 7}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 2,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 8}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 3,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 9}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 0,
+    "why": "{{Explanation}}"
+  },
+  {
+    "stem": "{{Question 10}}",
+    "options": ["{{A}}", "{{B}}", "{{C}}", "{{D}}"],
+    "answer": 1,
+    "why": "{{Explanation}}"
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

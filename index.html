@@ -4,111 +4,97 @@
   COURSE INDEX — CMSC 206
   Lives at the repo root, so asset paths have no ../ prefix.
 
-  To add a topic: copy one <li> below, bump the number, swap the
-  title/blurb/tags, and change class="lesson lesson--soon" to
-  an <a class="lesson" href="lessons/topicN.html"> once it's built.
+  Adding a topic:
+    published →  <a class="tocrow" href="lessons/topicN.html"> … </a>
+    not yet   →  <div class="tocrow tocrow--soon"> … </div>
+  Start a new group with another <p class="phase">…</p>.
   ============================================================
 -->
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CMSC 206 &middot; Database Management Systems</title>
+<title>CMSC 206 &middot; Study Guides</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
 </head>
-<body data-lesson="index">
+<body class="index">
 
-<header class="hero">
-  <p class="eyebrow">University of the Philippines Open University &middot; Faculty of Information and Communication Studies</p>
-  <h1>CMSC 206<br>Database Management<br>Systems</h1>
-  <p class="hero__lede">Interactive companion pages for the course lectures. Read the topic, work the activities, then check your understanding.</p>
-  <dl class="hero__meta">
-    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
-    <div><dt>Topics</dt><dd>1 published</dd></div>
-    <div><dt>Format</dt><dd>Self-paced</dd></div>
-  </dl>
+<header class="index-hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems</p>
+  <h1 class="index-title">Study Guides</h1>
+  <p class="index-lede">The course follows one question all the way down: how does a pile of facts become data you can trust, share, and query? Each topic adds another guarantee to the system you&rsquo;ll eventually design yourself.</p>
+
+  <div class="pillars">
+    <div class="pillar pillar--structure">
+      <span class="pillar__name">Structure</span>
+      <span class="pillar__what">how data is organised</span>
+    </div>
+    <div class="pillar pillar--integrity">
+      <span class="pillar__name">Integrity</span>
+      <span class="pillar__what">what stays true</span>
+    </div>
+    <div class="pillar pillar--access">
+      <span class="pillar__name">Access</span>
+      <span class="pillar__what">who gets what</span>
+    </div>
+  </div>
 </header>
 
-<div class="wrap">
+<div class="toc">
+  <hr class="toc__divider">
 
-  <section class="index-section">
-    <h2>Lessons</h2>
-    <p class="index-section__note">Each topic is a single page you can work through in one sitting. Nothing is graded &mdash; the checks are there to tell you what to re-read.</p>
+  <p class="phase">Phase 1 &middot; Foundations</p>
 
-    <ul class="lessons">
+  <a class="tocrow" href="lessons/topic1.html">
+    <span class="tocrow__num">01</span>
+    <span>
+      <span class="tocrow__title">Fundamental DBMS Concepts</span>
+      <span class="tocrow__desc">Databases and database management systems, the drawbacks of plain files, ACID and BASE, levels of abstraction, and types of DBMS.</span>
+    </span>
+    <span class="tocrow__go" aria-hidden="true">&rarr;</span>
+  </a>
 
-      <li>
-        <a class="lesson" href="lessons/topic1.html">
-          <span class="lesson__num">Topic 01</span>
-          <span class="lesson__body">
-            <span class="lesson__title">Fundamental DBMS Concepts</span>
-            <span class="lesson__blurb">What a database and a DBMS actually are, why plain files fall apart at scale, and the guarantees &mdash; ACID and BASE &mdash; that a DBMS gives you in return.</span>
-            <ul class="lesson__tags">
-              <li>DB &amp; DBMS</li>
-              <li>Filesystem drawbacks</li>
-              <li>ACID / BASE</li>
-              <li>Levels of abstraction</li>
-              <li>Types of DBMS</li>
-            </ul>
-          </span>
-          <span class="lesson__meta"><span class="items">10 items</span><span class="go">Start &rarr;</span></span>
-        </a>
-      </li>
+  <div class="tocrow tocrow--soon">
+    <span class="tocrow__num">02</span>
+    <span>
+      <span class="tocrow__title">{{Next topic title}}</span>
+      <span class="tocrow__desc">{{One sentence listing what the topic covers.}}</span>
+    </span>
+    <span class="tocrow__go">Soon</span>
+  </div>
 
-      <li>
-        <div class="lesson lesson--soon">
-          <span class="lesson__num">Topic 02</span>
-          <span class="lesson__body">
-            <span class="lesson__title">{{Next topic title}}</span>
-            <span class="lesson__blurb">{{One or two sentences on what this topic covers.}}</span>
-          </span>
-          <span class="lesson__meta">Coming soon</span>
-        </div>
-      </li>
+  <div class="tocrow tocrow--soon">
+    <span class="tocrow__num">03</span>
+    <span>
+      <span class="tocrow__title">{{Next topic title}}</span>
+      <span class="tocrow__desc">{{One sentence listing what the topic covers.}}</span>
+    </span>
+    <span class="tocrow__go">Soon</span>
+  </div>
 
-      <li>
-        <div class="lesson lesson--soon">
-          <span class="lesson__num">Topic 03</span>
-          <span class="lesson__body">
-            <span class="lesson__title">{{Next topic title}}</span>
-            <span class="lesson__blurb">{{One or two sentences on what this topic covers.}}</span>
-          </span>
-          <span class="lesson__meta">Coming soon</span>
-        </div>
-      </li>
-
-    </ul>
-  </section>
-
-  <section class="index-section">
-    <h2>How to use these pages</h2>
-    <p class="index-section__note">A few things worth knowing before you start.</p>
-    <div class="notes">
-      <article>
-        <h3>Work, don&rsquo;t skim</h3>
-        <p>The diagrams, trees, and card decks are tap-to-open on purpose. Predict the answer before you open one &mdash; that&rsquo;s where the learning happens.</p>
-      </article>
-      <article>
-        <h3>Progress isn&rsquo;t saved</h3>
-        <p>Reloading a page starts the Check Your Understanding over. Finish a topic in one sitting, or note the items you missed before you leave.</p>
-      </article>
-      <article>
-        <h3>These supplement the lectures</h3>
-        <p>Every page is adapted from the course slide deck for its topic. Read them alongside the original material, not instead of it.</p>
-      </article>
-    </div>
-  </section>
+  <div class="notes">
+    <article>
+      <h3>Work, don&rsquo;t skim</h3>
+      <p>The diagrams and cards are tap-to-open on purpose. Predict the answer before you open one.</p>
+    </article>
+    <article>
+      <h3>Progress isn&rsquo;t saved</h3>
+      <p>Reloading restarts the check. Finish a topic in one sitting, or note the items you missed.</p>
+    </article>
+    <article>
+      <h3>Read alongside the lectures</h3>
+      <p>Every page is adapted from the slide deck for its topic &mdash; a companion, not a replacement.</p>
+    </article>
+  </div>
 
   <footer class="foot">
     <p>Adapted from the <strong>CMSC 206 &mdash; Database Management Systems</strong> course materials, 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
-    <p class="foot__note">Built as static HTML, CSS, and JavaScript for embedding in Moodle.</p>
+    <p class="foot__note">Static HTML, CSS, and JavaScript, built for embedding in Moodle.</p>
   </footer>
-
 </div>
 
-<script src="assets/lesson.js"></script>
 </body>
 </html>

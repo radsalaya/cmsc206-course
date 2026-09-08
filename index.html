@@ -7,7 +7,8 @@
   Adding a topic:
     published →  <a class="tocrow" href="lessons/topicN.html"> … </a>
     not yet   →  <div class="tocrow tocrow--soon"> … </div>
-  Start a new group with another <p class="phase">…</p>.
+  Start a new group with another <p class="phase">…</p>, preceded
+  by <hr class="toc__divider"> for breathing room.
   ============================================================
 -->
 <html lang="en">
@@ -57,20 +58,55 @@
     <span class="tocrow__go" aria-hidden="true">&rarr;</span>
   </a>
 
-  <div class="tocrow tocrow--soon">
-    <span class="tocrow__num">02</span>
-    <span>
-      <span class="tocrow__title">{{Next topic title}}</span>
-      <span class="tocrow__desc">{{One sentence listing what the topic covers.}}</span>
-    </span>
-    <span class="tocrow__go">Soon</span>
-  </div>
+  <hr class="toc__divider">
 
-  <div class="tocrow tocrow--soon">
+  <p class="phase">Phase 2 &middot; Designing the Schema</p>
+
+  <a class="tocrow" href="lessons/Topic2-Part1.html">
+    <span class="tocrow__num">2.1</span>
+    <span>
+      <span class="tocrow__title">Data Models &middot; The ER Model</span>
+      <span class="tocrow__desc">Entities, attributes, and relationships; keys, cardinality, and participation; weak entities, and the notation used to draw an ER diagram.</span>
+    </span>
+    <span class="tocrow__go" aria-hidden="true">&rarr;</span>
+  </a>
+
+  <a class="tocrow" href="lessons/Topic2-Part2.html">
+    <span class="tocrow__num">2.2</span>
+    <span>
+      <span class="tocrow__title">The Relational Model</span>
+      <span class="tocrow__desc">Relations, tuples, attributes, domains and degree, the properties of a valid table, and the five cases for turning an ER diagram into a working schema.</span>
+    </span>
+    <span class="tocrow__go" aria-hidden="true">&rarr;</span>
+  </a>
+
+  <a class="tocrow" href="lessons/Topic3.html">
     <span class="tocrow__num">03</span>
     <span>
-      <span class="tocrow__title">{{Next topic title}}</span>
-      <span class="tocrow__desc">{{One sentence listing what the topic covers.}}</span>
+      <span class="tocrow__title">Normalization</span>
+      <span class="tocrow__desc">Redundancy and anomalies, functional dependencies, 1NF through BCNF, and lossless decomposition with Heath&rsquo;s theorem.</span>
+    </span>
+    <span class="tocrow__go" aria-hidden="true">&rarr;</span>
+  </a>
+
+  <hr class="toc__divider">
+
+  <p class="phase">Phase 3 &middot; Querying the Schema</p>
+
+  <a class="tocrow" href="lessons/Topic4.html">
+    <span class="tocrow__num">04</span>
+    <span>
+      <span class="tocrow__title">Relational Algebra</span>
+      <span class="tocrow__desc">Select, project, and rename; the set operations and type compatibility; cross product, the three kinds of join, division, and the outer operations.</span>
+    </span>
+    <span class="tocrow__go" aria-hidden="true">&rarr;</span>
+  </a>
+
+  <div class="tocrow tocrow--soon">
+    <span class="tocrow__num">05</span>
+    <span>
+      <span class="tocrow__title">SQL</span>
+      <span class="tocrow__desc">Relational algebra in the language you will actually type.</span>
     </span>
     <span class="tocrow__go">Soon</span>
   </div>

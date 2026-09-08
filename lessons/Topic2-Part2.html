@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 2 (Part 2) &middot; The Relational Model &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic2-part2">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 2 &middot; Part 2</p>
+  <h1>The Relational Model</h1>
+  <p class="hero__lede">From ER diagram to actual tables &mdash; relations, domains, keys, and the five conversion cases that turn any cardinality into a working schema.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>13</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic2 &middot; part 2</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#relation" class="rail__link"><span>02</span> Relation &amp; Table</a></li>
+      <li><a href="#column" class="rail__link"><span>03</span> Column</a></li>
+      <li><a href="#domain" class="rail__link"><span>04</span> Domain</a></li>
+      <li><a href="#records" class="rail__link"><span>05</span> Records &amp; Fields</a></li>
+      <li><a href="#degree" class="rail__link"><span>06</span> Degree</a></li>
+      <li><a href="#properties" class="rail__link"><span>07</span> Properties of a Table</a></li>
+      <li><a href="#l2p" class="rail__link"><span>08</span> Logical &rarr; Physical</a></li>
+      <li><a href="#case1" class="rail__link"><span>09</span> Case 1 &middot; 1:1 Total</a></li>
+      <li><a href="#case2" class="rail__link"><span>10</span> Case 2 &middot; 1:1 Partial</a></li>
+      <li><a href="#case3" class="rail__link"><span>11</span> Case 3 &middot; n:1</a></li>
+      <li><a href="#case4" class="rail__link"><span>12</span> Case 4 &middot; n:m</a></li>
+      <li><a href="#case5" class="rail__link"><span>13</span> Case 5 &middot; Weak Entity</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 INTRODUCTION ============ -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>The relational data model was introduced by <strong>E. F. Codd in 1970.</strong> Currently, it is the most widely used data model. It has provided the basis for:</p>
+          <ul class="list">
+            <li>Research on the theory of data, relationships, and constraints;</li>
+            <li>Numerous database design methodologies;</li>
+            <li>The standard database access language called <strong>Structured Query Language (SQL)</strong>; and</li>
+            <li>Almost all modern commercial database management systems.</li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Relation, table, tuple, attribute</li>
+            <li>Domain and degree</li>
+            <li>Properties of a table</li>
+            <li>Converting an ER diagram into tables</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ 02 RELATION & TABLE ============ -->
+    <section id="relation" class="section">
+      <p class="section__num">02</p>
+      <h2>Relation &amp; Table</h2>
+
+      <div class="definition">
+        <p class="definition__tag">Relation</p>
+        <p>A <mark>relation</mark> (also called a table or file) is a subset of the Cartesian product of a list of domains, identified by a name.</p>
+      </div>
+      <ul class="list">
+        <li>Each row in a table represents a group of related data values and is called a <strong>tuple</strong> or <strong>record</strong>.</li>
+        <li>The <strong>columns</strong> in a table are referred to as <strong>fields</strong> or <strong>attributes.</strong></li>
+        <li>An <strong>attribute</strong> defines the structure of a record.</li>
+        <li>A <strong>record</strong> consists of a set of attributes.</li>
+      </ul>
+
+      <h3 class="sub">The formal logic behind it</h3>
+      <p>The steps below outline the logic between a relation and its domains.</p>
+      <ol class="list">
+        <li>Given <em>n</em> domains, denoted by D<sub>1</sub>, D<sub>2</sub>, &hellip; D<sub>n</sub>.</li>
+        <li>And <em>r</em> is a relation defined on these domains.</li>
+        <li>Then r &sube; D<sub>1</sub>&times;D<sub>2</sub>&times;&hellip;&times;D<sub>n</sub>.</li>
+      </ol>
+
+      <div class="definition">
+        <p class="definition__tag">Table</p>
+        <p>A database is composed of multiple tables, and each table holds the data. A student&rsquo;s course records and instructor records, for example, live in separate tables that reference each other &mdash; not one giant table.</p>
+      </div>
+    </section>
+
+    <!-- ============ 03 COLUMN ============ -->
+    <section id="column" class="section">
+      <p class="section__num">03</p>
+      <h2>Column</h2>
+      <ul class="list">
+        <li>A <strong>database</strong> organizes and stores information in a structured manner. Understanding that organization is essential to using it effectively.</li>
+        <li>The main storage units in a database are called <strong>columns, fields,</strong> or <strong>attributes.</strong> These fields hold the basic components of data, breaking down information into manageable parts.</li>
+        <li>When creating fields, focus on the <strong>common elements</strong> of the data, not the specific details that differentiate individual items.</li>
+      </ul>
+
+      <h3 class="sub">A worked example</h3>
+      <p class="hint">Fields (columns) and the data they hold, for one ID record.</p>
+      <table style="width:100%; border-collapse:collapse; font-size:.92rem;">
+        <tr style="border-bottom:1px solid var(--rule);"><th style="text-align:left; padding:.5rem 0; font-family:var(--mono); font-size:.7rem; color:var(--ink-faint); text-transform:uppercase;">Field Name</th><th style="text-align:left; padding:.5rem 0; font-family:var(--mono); font-size:.7rem; color:var(--ink-faint); text-transform:uppercase;">Data</th></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">First Name</td><td style="padding:.5rem 0;">Isabelle</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Family Name</td><td style="padding:.5rem 0;">Whelan</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Nationality</td><td style="padding:.5rem 0;">British</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Salary</td><td style="padding:.5rem 0;">109,900</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Date of Birth</td><td style="padding:.5rem 0;">15 September 1983</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Marital Status</td><td style="padding:.5rem 0;">Single</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Shift</td><td style="padding:.5rem 0;">Mon, Wed</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Place of issue</td><td style="padding:.5rem 0;">Addis Ababa</td></tr>
+        <tr><td style="padding:.5rem 0;">Valid until</td><td style="padding:.5rem 0;">17 December 2003</td></tr>
+      </table>
+    </section>
+
+    <!-- ============ 04 DOMAIN ============ -->
+    <section id="domain" class="section">
+      <p class="section__num">04</p>
+      <h2>Domain</h2>
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>A <mark>domain</mark> is the set of atomic (indivisible) values used to model data in a relational model. An <strong>atomic value</strong> means each value in the domain cannot be further divided.</p>
+      </div>
+      <p class="callout callout--note">In summary, a domain defines the acceptable values a column can contain, based on properties and data types.</p>
+
+      <h3 class="sub">Examples of domains</h3>
+      <p class="hint">Tap an attribute to see its domain.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Marital Status</span>
+          <span class="card__sub">a fixed set of values</span>
+          <span class="card__data"><em>domain:</em> {Married, Single, Divorced}</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Shift</span>
+          <span class="card__sub">a fixed set of values</span>
+          <span class="card__data"><em>domain:</em> {Mon, Tue, Wed, etc.}</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Salary</span>
+          <span class="card__sub">a bounded numeric range</span>
+          <span class="card__data"><em>domain:</em> all floating-point numbers greater than 0 and less than 200,000.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">First Name</span>
+          <span class="card__sub">a constrained set of strings</span>
+          <span class="card__data"><em>domain:</em> set of character strings representing names.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ 05 RECORDS & FIELDS ============ -->
+    <section id="records" class="section">
+      <p class="section__num">05</p>
+      <h2>Records &amp; Fields</h2>
+      <div class="definition">
+        <p class="definition__tag">Records &amp; fields</p>
+        <p><strong>Records</strong> and <strong>fields</strong> are the foundation of all databases, allowing data to be stored and linked together for reconstitution. A <strong>record</strong> (also known as a tuple) contains related fields, such as for a customer or employee. <strong>Fields</strong> hold individual pieces of data, which together make up a record.</p>
+      </div>
+      <p>Databases can filter and sort records based on field data, such as dates, which are ordered according to a calendar system rather than as simple numbers.</p>
+
+      <h3 class="sub">How fields work together</h3>
+      <p class="hint">A small Book table &mdash; tap a field to see its data type.</p>
+      <table style="width:100%; border-collapse:collapse; font-size:.9rem; margin-bottom:1.2rem;">
+        <tr style="border-bottom:1px solid var(--rule);">
+          <th style="text-align:left; padding:.5rem .6rem; font-family:var(--mono); font-size:.68rem; color:var(--ink-faint); text-transform:uppercase;">Record ID</th>
+          <th style="text-align:left; padding:.5rem .6rem; font-family:var(--mono); font-size:.68rem; color:var(--ink-faint); text-transform:uppercase;">PubDate</th>
+          <th style="text-align:left; padding:.5rem .6rem; font-family:var(--mono); font-size:.68rem; color:var(--ink-faint); text-transform:uppercase;">Author</th>
+          <th style="text-align:left; padding:.5rem .6rem; font-family:var(--mono); font-size:.68rem; color:var(--ink-faint); text-transform:uppercase;">Title</th>
+        </tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem .6rem;">1</td><td style="padding:.5rem .6rem;">26/07/1968</td><td style="padding:.5rem .6rem;">B. Pitt</td><td style="padding:.5rem .6rem;">Rights and Wrongs Online</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem .6rem;">2</td><td style="padding:.5rem .6rem;">3/3/2000</td><td style="padding:.5rem .6rem;">A. Jolie</td><td style="padding:.5rem .6rem;">Networking for Change</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem .6rem;">3</td><td style="padding:.5rem .6rem;">27/02/1971</td><td style="padding:.5rem .6rem;">J. Carter</td><td style="padding:.5rem .6rem;">The Myth of Cyber Crimes</td></tr>
+        <tr><td style="padding:.5rem .6rem;">4</td><td style="padding:.5rem .6rem;">15/09/1982</td><td style="padding:.5rem .6rem;">T. Wheaton</td><td style="padding:.5rem .6rem;">Connecting the Disconnected</td></tr>
+      </table>
+
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Record ID</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>An ordinal number. Data type is <strong>integer.</strong></p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">PubDate</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Displayed as day/month/year. Data type is <strong>date.</strong></p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Author</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Displayed as Initial. Surname. Data type is <strong>text.</strong></p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">Title</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Free text can be entered.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 06 DEGREE ============ -->
+    <section id="degree" class="section">
+      <p class="section__num">06</p>
+      <h2>Degree</h2>
+      <p>The <strong>degree</strong> is the number of attributes in a table.</p>
+      <p class="equation">Degree of the Book table (Record ID, PubDate, Author, Title) = <b>4</b></p>
+    </section>
+
+    <!-- ============ 07 PROPERTIES OF A TABLE ============ -->
+    <section id="properties" class="section">
+      <p class="section__num">07</p>
+      <h2>Properties of a Table</h2>
+      <ul class="list">
+        <li>A table has a name that is distinct from all other tables in the database.</li>
+        <li>There are no duplicate rows; each row is distinct.</li>
+        <li>Entries in columns are atomic. The table does not contain repeating groups or multivalued attributes.</li>
+        <li>Entries from columns are from the same domain, based on their data type &mdash; <code>number</code> (numeric, integer, float, smallint&hellip;), <code>character</code> (string), <code>date</code>, <code>logical</code> (true or false).</li>
+        <li>Operations combining different data types are disallowed.</li>
+        <li>Each attribute has a distinct name.</li>
+        <li>The sequence of columns is insignificant.</li>
+        <li>The sequence of rows is insignificant.</li>
+      </ul>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct &mdash; those three are the true properties. Duplicate rows and mixed-type entries are exactly what a valid table disallows."
+           data-no="Not quite. The three TRUE statements are: column order doesn't matter, every attribute has a distinct name, and row order doesn't matter.">
+        <p class="activity__prompt">Tap the statements that are <strong>TRUE</strong> of a valid relational table.</p>
+        <div class="chips">
+          <button class="chip" type="button">Two rows may repeat if they differ in just one column</button>
+          <button class="chip" type="button" data-correct="true">Column order doesn&rsquo;t matter</button>
+          <button class="chip" type="button" data-correct="true">Every attribute has a distinct name</button>
+          <button class="chip" type="button">A column may mix numbers and text</button>
+          <button class="chip" type="button" data-correct="true">Row order doesn&rsquo;t matter</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 08 LOGICAL TO PHYSICAL ============ -->
+    <section id="l2p" class="section">
+      <p class="section__num">08</p>
+      <h2>From Logical to Physical Model</h2>
+      <p>When designing a DB, we first draft a conceptual model &mdash; the ER model &mdash; before designing the physical model with the relational model. This process echoes the levels of abstraction from Part 1.</p>
+      <ol class="list">
+        <li>Design the conceptual model with the end user or stakeholders, who know what information they need but don&rsquo;t really care about how the DB is implemented.</li>
+        <li>Make a logical relational model.</li>
+        <li>Design a physical relational model by adding the domains of the attributes.</li>
+      </ol>
+      <p class="callout callout--note">This is exactly the three levels from <a href="Topic2-Part1.html#levels">Part 1</a> &mdash; conceptual, logical, and physical &mdash; now put into practice.</p>
+      <p class="callout callout--warn">Notation used below: <code>Table_name(attribute1, attribute2, &hellip; attributeN)</code>. The <u>underlined</u> attribute is the primary key.</p>
+    </section>
+
+    <!-- ============ 09 CASE 1 ============ -->
+    <section id="case1" class="section">
+      <p class="section__num">09</p>
+      <h2>Case 1 &middot; Binary, 1:1, Total Participation</h2>
+      <p class="hint">A person has 0 or 1 passport number, and a passport is always owned by exactly 1 person.</p>
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__col">
+            <div class="relgram__box">Person</div>
+            <span class="relgram__line relgram__line--partial"></span>
+            <span class="relgram__num" style="border-radius:4px; width:auto;">1</span>
+          </div>
+          <div class="relgram__pill">Has</div>
+          <div class="relgram__col">
+            <span class="relgram__num" style="border-radius:4px; width:auto;">1</span>
+            <span class="relgram__line relgram__line--total"></span>
+            <div class="relgram__box">Passport</div>
+          </div>
+        </div>
+        <figcaption><strong>Figure 1:</strong> 1:1 cardinality, total participation from Passport&rsquo;s side (double line).</figcaption>
+      </figure>
+
+      <h3 class="sub">1. Convert each entity and relationship to tables</h3>
+      <ul class="list">
+        <li><code>Person(<u>Per-id</u>)</code> &mdash; corresponds to the Person entity, with key Per-Id.</li>
+        <li><code>Passport(<u>Pass-No</u>)</code> &mdash; corresponds to the Passport entity, with key Pass-No.</li>
+        <li><code>Has(Per-id, Pass-No)</code> &mdash; represents the relationship between Person and Passport, taking Per-Id from Person and Pass-No from Passport.</li>
+      </ul>
+
+      <h3 class="sub">2. Combine tables that can be combined</h3>
+      <p>Since Person and Passport have a 1:1 cardinality with total participation of Passport, we can combine all three into one table.</p>
+      <p><code>Person(<u>Per-id</u>, Pass-No)</code></p>
+      <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">Each Per-Id will be unique and not null, so it becomes the key. Pass-No can&rsquo;t be the key, because for some people it can be NULL.</p>
+    </section>
+
+    <!-- ============ 10 CASE 2 ============ -->
+    <section id="case2" class="section">
+      <p class="section__num">10</p>
+      <h2>Case 2 &middot; Binary, 1:1, Partial on Both Sides</h2>
+      <p class="hint">A male marries 0 or 1 female, and vice versa.</p>
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__col">
+            <div class="relgram__box">Male</div>
+            <span class="relgram__line relgram__line--partial"></span>
+            <span class="relgram__num" style="border-radius:4px; width:auto;">1</span>
+          </div>
+          <div class="relgram__pill">Marry</div>
+          <div class="relgram__col">
+            <span class="relgram__num" style="border-radius:4px; width:auto;">1</span>
+            <span class="relgram__line relgram__line--partial"></span>
+            <div class="relgram__box">Female</div>
+          </div>
+        </div>
+        <figcaption><strong>Figure 2:</strong> 1:1 cardinality, partial participation on both sides (single line, both ends).</figcaption>
+      </figure>
+
+      <h3 class="sub">1. Convert each entity and relationship to tables</h3>
+      <ul class="list">
+        <li><code>Male(<u>M-id</u>)</code></li>
+        <li><code>Female(<u>F-id</u>)</code></li>
+        <li><code>Marry(M-id, F-id)</code></li>
+      </ul>
+
+      <h3 class="sub">2. Combine tables that can be combined</h3>
+      <p>Some males and some females don&rsquo;t marry. If we merge all three tables into one, whichever column represents the unmarried side would be NULL &mdash; but there&rsquo;s no single attribute we can rely on to always be non-NULL. So we can&rsquo;t merge all three into one. We convert into two tables instead:</p>
+      <ul class="list">
+        <li><code>Male(<u>M-id</u>, F-id)</code> &mdash; the M-id who are married will have an F-id associated. For others, it will be NULL.</li>
+        <li><code>Female(<u>F-id</u>)</code></li>
+      </ul>
+      <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">Note: we could just as easily have made Female the table carrying the male attribute if that fit the scenario better &mdash; the Female table would then have information on all females.</p>
+    </section>
+
+    <!-- ============ 11 CASE 3 ============ -->
+    <section id="case3" class="section">
+      <p class="section__num">11</p>
+      <h2>Case 3 &middot; Binary, n:1</h2>
+      <p class="hint">Every student can enroll in only one elective course, but an elective course can have more than one student.</p>
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__end"><div class="relgram__box">Student</div><span class="relgram__num">n</span></div>
+          <div class="relgram__pill">Enrolls</div>
+          <div class="relgram__end"><span class="relgram__num">1</span><div class="relgram__box">Elective Course</div></div>
+        </div>
+        <figcaption><strong>Figure 3:</strong> n:1 cardinality &mdash; many students, one elective course each.</figcaption>
+      </figure>
+
+      <h3 class="sub">1. Convert each entity and relationship to tables</h3>
+      <ul class="list">
+        <li><code>Student(<u>S-id</u>)</code></li>
+        <li><code>Elective Course(<u>E-id</u>)</code></li>
+        <li><code>Enrolls(S-id, E-id)</code></li>
+      </ul>
+
+      <h3 class="sub">2. Combine tables that can be combined</h3>
+      <ul class="list">
+        <li><code>Student(<u>S-id</u>, E-id)</code></li>
+        <li><code>Elective Course(<u>E-id</u>)</code></li>
+      </ul>
+      <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">Each student needs only one E-id, so Enrolls merges straight into Student &mdash; the foreign key sits on the &ldquo;many&rdquo; side.</p>
+    </section>
+
+    <!-- ============ 12 CASE 4 ============ -->
+    <section id="case4" class="section">
+      <p class="section__num">12</p>
+      <h2>Case 4 &middot; Binary, n:m</h2>
+      <p class="hint">Every student can enroll in more than one compulsory course, and a compulsory course can have more than one student.</p>
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__end"><div class="relgram__box">Student</div><span class="relgram__num">n</span></div>
+          <div class="relgram__pill">Enrolls</div>
+          <div class="relgram__end"><span class="relgram__num">m</span><div class="relgram__box">Compulsory Course</div></div>
+        </div>
+        <figcaption><strong>Figure 4:</strong> n:m cardinality &mdash; many-to-many.</figcaption>
+      </figure>
+
+      <h3 class="sub">1. Convert each entity and relationship to tables</h3>
+      <ul class="list">
+        <li><code>Student(<u>S-id</u>)</code></li>
+        <li><code>Compulsory Course(<u>C-id</u>)</code></li>
+        <li><code>Enrolls(S-id, C-id)</code></li>
+      </ul>
+
+      <h3 class="sub">2. Combine tables that can be combined</h3>
+      <p><strong>None.</strong> An n:m relationship can never be merged away &mdash; combining any of these would force repeating groups, which breaks the atomic-entries property from Page 7. All three tables stay separate.</p>
+    </section>
+
+    <!-- ============ 13 CASE 5 ============ -->
+    <section id="case5" class="section">
+      <p class="section__num">13</p>
+      <h2>Case 5 &middot; Relationship with a Weak Entity</h2>
+      <p class="hint">An Employee can have many Dependents (one-to-many). A Dependent depends on exactly one Employee for existence.</p>
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__end"><div class="relgram__box">Employee</div><span class="relgram__num">1</span></div>
+          <div class="relgram__pill">Has</div>
+          <div class="relgram__end"><span class="relgram__num">n</span><div class="relgram__box relgram__box--weak">Dependants</div></div>
+        </div>
+        <figcaption><strong>Figure 5:</strong> Weak entity &mdash; double rectangle. Total participation from the Dependant&rsquo;s side.</figcaption>
+      </figure>
+
+      <p>The Dependent is a weak entity because it cannot be uniquely identified without its related Employee. The Dependent&rsquo;s key is a combination of the Employee&rsquo;s primary key (E-id) and a partial key of the Dependent (D-Name). The Dependent&rsquo;s participation in the relationship with Employee is total.</p>
+
+      <h3 class="sub">1. Convert each entity and relationship to tables</h3>
+      <ul class="list">
+        <li><code>Employee(<u>E-id</u>)</code></li>
+        <li><code>Dependants(D-Name)</code></li>
+        <li><code>Has(E-id, D-Name)</code></li>
+      </ul>
+
+      <h3 class="sub">2. Combine tables that can be combined</h3>
+      <ul class="list">
+        <li><code>Employee(<u>E-id</u>)</code></li>
+        <li><code>Dependants(<u>D-Name, E-id</u>)</code></li>
+      </ul>
+      <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">A weak entity&rsquo;s relationship to its owner always merges in &mdash; there is no Dependant without an Employee, so keeping &ldquo;Has&rdquo; as its own table would only ever duplicate the Employee link.</p>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li>The <strong>relational model</strong> (Codd, 1970) represents data as <strong>relations</strong> (tables) built from <strong>domains.</strong></li>
+        <li>A <strong>tuple</strong> (record) is a row; an <strong>attribute</strong> (field) is a column.</li>
+        <li>A <strong>domain</strong> is the set of atomic values a column may hold; the <strong>degree</strong> is the number of attributes in a table.</li>
+        <li>A valid table has a distinct name, no duplicate rows, atomic entries, same-domain columns, distinct attribute names, and insignificant row/column order.</li>
+        <li>Converting an ER diagram means turning every entity and relationship into a table, then merging what a cardinality and participation constraint allow you to merge.</li>
+        <li><strong>1:1 with total participation</strong> merges into one table. <strong>1:1 with partial participation on both sides</strong> merges into two. <strong>n:1</strong> merges the relationship into the &ldquo;many&rdquo; side. <strong>n:m</strong> never merges. A <strong>weak entity</strong> always absorbs its identifying relationship.</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="Topic2-Part1.html">&larr; Part 1</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <a href="topic3.html">Topic 3 &rarr;</a>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;The Relational Model &mdash; Part 2,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Nguyen Kim Anh, <em>Data Modeling Using Entity-Relationship Model</em> and <em>Database Design</em> (BCcampus, CC BY 3.0); GeeksforGeeks, <em>Introduction to ER Model</em> and <em>Mapping from ER Model to Relational Model.</em></p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "A column may only hold values from the set {Married, Single, Divorced}. What is this set called?",
+    "options": ["An attribute", "A domain", "A tuple", "A degree"],
+    "answer": 1,
+    "why": "A <strong>domain</strong> is the set of atomic values used to model data in a relational model &mdash; exactly what {Married, Single, Divorced} is for a Marital Status column."
+  },
+  {
+    "stem": "A table has four columns: Record ID, PubDate, Author, and Title. What is the degree of this table?",
+    "options": ["Three", "Five", "Four", "One, since degree counts primary keys only"],
+    "answer": 2,
+    "why": "Degree is the number of attributes (columns) in a table &mdash; here, <strong>four.</strong>"
+  },
+  {
+    "stem": "Which of these would violate a core property of a relational table?",
+    "options": [
+      "Two rows that are exact duplicates of each other",
+      "Columns listed in a different order than usual",
+      "Rows returned in an order that doesn't match insertion order",
+      "A Salary column that stores only numbers"
+    ],
+    "answer": 0,
+    "why": "A valid table allows no <strong>duplicate rows.</strong> Column order and row order are both insignificant, and same-domain columns are exactly what's expected."
+  },
+  {
+    "stem": "Person(Per-id) and Passport(Pass-No) have a 1:1 relationship, Has, and every Passport must belong to exactly one Person (total participation from Passport's side). How should these become tables?",
+    "options": [
+      "Merge everything into Person(Per-id, Pass-No) &mdash; Per-id is always unique and not null",
+      "Keep Person, Passport, and Has as three separate tables",
+      "Merge everything into Passport(Pass-No, Per-id) &mdash; Pass-No is always unique and not null",
+      "Merge Person and Passport only; keep Has as its own table"
+    ],
+    "answer": 0,
+    "why": "Because Passport has total participation but Person only has partial participation (not everyone has a passport), merging into <strong>Person(Per-id, Pass-No)</strong> works &mdash; Per-id is always present, while Pass-No can be NULL for people without one."
+  },
+  {
+    "stem": "In the Male&ndash;Marry&ndash;Female case (1:1, partial participation on both sides), why can't all three tables be merged into one?",
+    "options": [
+      "Because 1:1 relationships can never be merged",
+      "Because some males and some females don't marry, so a single shared table would need NULLs depending on who's asked",
+      "Because Male and Female must always stay in separate tables by definition",
+      "Because Marry has no attributes of its own"
+    ],
+    "answer": 1,
+    "why": "With partial participation on <strong>both</strong> sides, there's no single attribute guaranteed to be non-NULL for everyone &mdash; so instead of one table, it becomes two: Male(M-id, F-id) and Female(F-id)."
+  },
+  {
+    "stem": "Every student enrolls in exactly one elective course, but an elective course can have many students. Where does the foreign key end up?",
+    "options": [
+      "In the Elective Course table, referencing Student",
+      "In the Student table, referencing Elective Course",
+      "In a separate Enrolls table only, kept apart from both",
+      "Nowhere &mdash; no foreign key is needed"
+    ],
+    "answer": 1,
+    "why": "Each student needs only one E-id, so the Enrolls relationship merges straight into <strong>Student(S-id, E-id)</strong> &mdash; the foreign key goes on the &ldquo;many&rdquo; side."
+  },
+  {
+    "stem": "Every student can enroll in more than one compulsory course, and a compulsory course can have more than one student. How many tables remain after conversion?",
+    "options": ["Two", "Three", "One", "Four"],
+    "answer": 1,
+    "why": "An n:m relationship can't be merged at all without creating repeating groups &mdash; Student, Compulsory Course, and Enrolls all stay separate: <strong>three</strong> tables."
+  },
+  {
+    "stem": "A Dependent (covered under an Employee's benefits) can't be identified without its Employee, and has only a partial key, D-Name. What does the Dependent's table need as its primary key?",
+    "options": ["D-Name alone", "E-id alone", "D-Name combined with E-id", "No primary key is needed for a weak entity's table"],
+    "answer": 2,
+    "why": "A weak entity's key is always the combination of its own <strong>partial key</strong> and its owner's <strong>primary key</strong> &mdash; here, D-Name plus E-id."
+  },
+  {
+    "stem": "Which of these is NOT one of the three steps in going from a conceptual model to a physical model?",
+    "options": [
+      "Design the conceptual model with end users and stakeholders",
+      "Make a logical relational model",
+      "Normalize every table to fifth normal form",
+      "Design a physical relational model by adding domains to attributes"
+    ],
+    "answer": 2,
+    "why": "The three steps taught here are conceptual &rarr; logical relational model &rarr; physical relational model. Normalization to 5NF isn't part of that process as covered in this lesson."
+  },
+  {
+    "stem": "In the notation Person(Per-id, Pass-No), what does the underline under Per-id mean?",
+    "options": ["Per-id is a foreign key", "Per-id is the primary key of this table", "Per-id must always be NULL", "Per-id is a multivalued attribute"],
+    "answer": 1,
+    "why": "By convention, the <strong>underlined</strong> attribute in Table_name(attribute1, attribute2, &hellip;) notation is the primary key."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

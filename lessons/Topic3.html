@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 3 &middot; Normalization &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic3">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 3</p>
+  <h1>Normalization</h1>
+  <p class="hero__lede">Redundancy breeds anomalies. Functional dependencies expose them, and the normal forms &mdash; 1NF through BCNF &mdash; tell you exactly how to decompose a schema without losing a single fact.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>13</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic3</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#unnormalized" class="rail__link"><span>02</span> A Non-Normalized Schema</a></li>
+      <li><a href="#fds" class="rail__link"><span>03</span> Functional Dependencies</a></li>
+      <li><a href="#trivial" class="rail__link"><span>04</span> Trivial &amp; Non-Trivial FDs</a></li>
+      <li><a href="#remarks" class="rail__link"><span>05</span> Remarks &amp; Key Terms</a></li>
+      <li><a href="#normalforms" class="rail__link"><span>06</span> From FDs to Normal Forms</a></li>
+      <li><a href="#nf1" class="rail__link"><span>07</span> First Normal Form</a></li>
+      <li><a href="#nf2" class="rail__link"><span>08</span> Second Normal Form</a></li>
+      <li><a href="#nf3" class="rail__link"><span>09</span> Third Normal Form</a></li>
+      <li><a href="#bcnf" class="rail__link"><span>10</span> Boyce&ndash;Codd Normal Form</a></li>
+      <li><a href="#nf45" class="rail__link"><span>11</span> Fourth &amp; Fifth NF</a></li>
+      <li><a href="#decomp" class="rail__link"><span>12</span> Decomposition</a></li>
+      <li><a href="#heath" class="rail__link"><span>13</span> Lossless &amp; Heath&rsquo;s Theorem</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 INTRODUCTION ============ -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>We now have the tools to design databases &mdash; the ER model, the relational model, keys and constraints. But how do we make sure the database we end up with is actually <strong>usable</strong>: easy to maintain and easy to query? Until now we have mostly been using common sense.</p>
+          <div class="definition">
+            <p class="definition__tag">Normalization</p>
+            <p><mark>Normalization</mark> is the process of transforming a relational model into another equivalent model that follows a set of rules that make it avoid redundancy, and thus make it easier to maintain and query.</p>
+          </div>
+          <p>The rules of normalization rely on the concept of <strong>functional dependencies</strong>, which we build up in this lesson. First, though, let&rsquo;s look at a database that is <em>not</em> normalized, to get a feel for why we would want to normalize at all.</p>
+
+          <h3 class="sub">Learning outcomes</h3>
+          <ul class="list">
+            <li>Define functional dependencies and their role in normalization;</li>
+            <li>Identify problems in unnormalized relations;</li>
+            <li>Transform relations into 1NF, 2NF, 3NF, and BCNF; and</li>
+            <li>Explain lossless decomposition.</li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Update, insertion, deletion anomalies</li>
+            <li>Functional dependency X &rarr; Y</li>
+            <li>Determinant and candidate key</li>
+            <li>1NF, 2NF, 3NF, BCNF</li>
+            <li>Lossless decomposition</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ 02 NON-NORMALIZED SCHEMA ============ -->
+    <section id="unnormalized" class="section">
+      <p class="section__num">02</p>
+      <h2>A Non-Normalized Schema</h2>
+      <p>A supplier delivers a product in a given quantity. One obvious way to store that is a single table:</p>
+      <p class="equation"><b>Delivery</b>(<u>SupplierId</u>, SupplierTown, <u>ProductID</u>, ProductType, Quantity)</p>
+      <p class="hint">Underlined attributes form the primary key.</p>
+      <figure class="figure">
+        <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">SupplierId</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">SupplierTown</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">ProductID</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">ProductType</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Quantity</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">S1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Manila</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">P1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Laptop</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">100</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">S1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Manila</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">P2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Printer</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">50</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">S2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Cebu</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">P3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Monitor</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">30</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">S2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Cebu</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">P4</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Monitor</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">25</td>
+</tr>
+</tbody></table></div>
+        <figcaption>Table 1. A non-normalized DB with inconsistencies. The highlighted cells are values repeated for no reason other than the shape of the table.</figcaption>
+      </figure>
+
+      <h3 class="sub">Where the redundancy is</h3>
+      <ul class="list">
+        <li><em>SupplierTown</em> is repeated for every delivery made by the same supplier.</li>
+        <li><em>ProductType</em> is repeated for every delivery of the same product.</li>
+      </ul>
+      <p>This is not merely wasted space. It causes <strong>anomalies</strong> &mdash; situations where an ordinary operation on the table either forces extra work or destroys information.</p>
+
+      <p class="hint">Tap each anomaly to see what goes wrong.</p>
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Update</b> anomaly</span>
+          <span class="quad__short">the same fact lives in many rows</span>
+          <span class="quad__long">If &ldquo;Manila&rdquo; changes to &ldquo;Quezon City,&rdquo; we must update every row where S1 appears. Miss one row and the database now claims S1 is in two towns at once.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Insertion</b> anomaly</span>
+          <span class="quad__short">facts that cannot be recorded on their own</span>
+          <span class="quad__long">We cannot add a new supplier until they actually deliver a product &mdash; there is no row to put the supplier&rsquo;s town in without a ProductID, which is part of the primary key.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Deletion</b> anomaly</span>
+          <span class="quad__short">deleting one fact deletes another</span>
+          <span class="quad__long">If we delete all deliveries of S2, we also lose the fact that S2 is based in Cebu. The town was only ever stored as a side effect of a delivery.</span>
+        </button>
+      </div>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. All three are anomalies caused by storing supplier and product facts inside the delivery rows."
+           data-no="Not quite. The three real problems are the update, insertion, and deletion anomalies. Quantity varying per row is normal &mdash; it genuinely depends on both the supplier and the product.">
+        <p class="activity__prompt">Tap every problem that comes from keeping <strong>SupplierTown</strong> and <strong>ProductType</strong> inside the Delivery table.</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">Changing a supplier&rsquo;s town means editing many rows</button>
+          <button class="chip" type="button">Quantity is different in every row</button>
+          <button class="chip" type="button" data-correct="true">A new supplier cannot be recorded before their first delivery</button>
+          <button class="chip" type="button" data-correct="true">Deleting a supplier&rsquo;s deliveries erases their town</button>
+          <button class="chip" type="button">The table has five columns</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 03 FUNCTIONAL DEPENDENCIES ============ -->
+    <section id="fds" class="section">
+      <p class="section__num">03</p>
+      <h2>Functional Dependencies</h2>
+      <p>To fix anomalies we first need to understand <strong>how attributes depend on each other.</strong> An FD shows how attributes are related: if we know the value of one attribute (or set of attributes), we can determine another.</p>
+
+      <div class="definition">
+        <p class="definition__tag">Formal definition</p>
+        <p>A <mark>functional dependency</mark> is a constraint between two sets of attributes X and Y. We say <strong>Y is functionally dependent on X</strong>, written <strong>X &rarr; Y</strong>, if:</p>
+      </div>
+      <p class="equation">&forall;t<sub>1</sub>, t<sub>2</sub> : &nbsp; t<sub>1</sub>[X] = t<sub>2</sub>[X] &nbsp;&rArr;&nbsp; t<sub>1</sub>[Y] = t<sub>2</sub>[Y]</p>
+      <p class="callout callout--note">In simpler words: if two tuples have the same value of X, then they must also have the same value of Y. Basically, knowing X gives us Y.</p>
+
+      <h3 class="sub">The FDs hiding in the Delivery table</h3>
+      <p class="hint">Tap a dependency to see the rule it encodes.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">SupplierId &rarr; SupplierTown</span>
+          <span class="card__sub">a supplier has only one town</span>
+          <span class="card__data"><em>meaning:</em> if two rows have the same SupplierId, they must have the same SupplierTown. S1 is in Manila in every row, or the data is wrong.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">ProductID &rarr; ProductType</span>
+          <span class="card__sub">a product has only one type</span>
+          <span class="card__data"><em>meaning:</em> if two rows have the same ProductID, they must have the same ProductType. P3 is a Monitor wherever it appears.</span>
+        </button>
+      </div>
+      <p class="callout callout--note">These FDs capture the &ldquo;rules&rdquo; in the data that help us remove redundancy. They are what guides the whole process of normalization.</p>
+    </section>
+
+    <!-- ============ 04 TRIVIAL & NON-TRIVIAL ============ -->
+    <section id="trivial" class="section">
+      <p class="section__num">04</p>
+      <h2>Trivial &amp; Non-Trivial FDs</h2>
+      <p>Suppose the Delivery relation also carries a <code>DeliveryId</code>. Not every dependency you can write down is worth anything.</p>
+
+      <h3 class="sub">1 &middot; Trivial FD</h3>
+      <p class="equation" style="font-size:1rem;">{DeliveryId} &rarr; {DeliveryId, SupplierId, SupplierTown, ProductId, ProductType, Quantity}</p>
+      <p>This one is <strong>trivial</strong> because everything on the left is already included on the right. It tells us nothing new.</p>
+
+      <h3 class="sub">2 &middot; Non-trivial FDs (the useful ones)</h3>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">{SupplierId} &rarr; {SupplierTown}</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A supplier has only one town. This is a <strong>direct</strong> FD &mdash; it comes straight from a business rule.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">{DeliveryId} &rarr; {ProductId}</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Each delivery corresponds to one product.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">{ProductId} &rarr; {ProductType}</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A product has only one type.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">{DeliveryId} &rarr; {ProductType}</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>This one follows <em>transitively</em>: DeliveryId &rarr; ProductId and ProductId &rarr; ProductType, so DeliveryId &rarr; ProductType. It is <strong>derived</strong>, not declared.</p></div>
+        </div>
+      </div>
+      <p class="callout callout--warn"><strong>NOTE:</strong> Some FDs are <u>direct</u> (given by business rules), others are <u>derived</u> (through transitivity). Transitivity is exactly the mechanism that 3NF will later ask us to remove.</p>
+    </section>
+
+    <!-- ============ 05 REMARKS & KEY TERMS ============ -->
+    <section id="remarks" class="section">
+      <p class="section__num">05</p>
+      <h2>Remarks &amp; Key Terms</h2>
+      <ul class="list">
+        <li>FDs are part of the <strong>semantics of the data</strong> &mdash; the meaning of the attributes.</li>
+        <li>They are <strong>declared by the database designer</strong> and not &ldquo;discovered&rdquo; automatically.</li>
+        <li>They are <strong>independent of the DBMS</strong> itself, though constraints like keys enforce them.</li>
+        <li>FDs depend on the <strong>schema</strong>, not on a particular state of the database.</li>
+        <li>You <strong>cannot always infer FDs just by looking at the current tuples.</strong> You need domain knowledge.</li>
+      </ul>
+      <p class="callout callout--warn">That last point matters in practice. Two rows happening to agree today does not make a dependency &mdash; only a rule that must hold for <em>every</em> possible state of the table does.</p>
+
+      <h3 class="sub">Three terms to keep straight</h3>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">left-hand side</p>
+          <h3>Determinant</h3>
+          <p>The set of attributes that, when known, uniquely determine the values of the dependent set. If two rows agree on the determinant, they must agree on the dependent attributes.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">right-hand side</p>
+          <h3>Dependent set</h3>
+          <p>The attributes whose values are fixed once the determinant is known. In SupplierId &rarr; SupplierTown, SupplierTown is the dependent attribute.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">special case</p>
+          <h3>Candidate key</h3>
+          <p>A special determinant that determines <strong>all attributes</strong> of a relation. Every candidate key is a determinant; not every determinant is a candidate key &mdash; which is the whole point of BCNF.</p>
+        </article>
+      </div>
+      <p class="callout callout--note">Although not part of the core relational model, FDs are essential for <strong>query optimization</strong> and <strong>database schema normalization.</strong></p>
+    </section>
+
+    <!-- ============ 06 FROM FDs TO NORMAL FORMS ============ -->
+    <section id="normalforms" class="section">
+      <p class="section__num">06</p>
+      <h2>From FDs to Normal Forms</h2>
+      <ul class="list">
+        <li><strong>Functional dependencies (FDs)</strong> show how attributes relate.</li>
+        <li>If a schema ignores these dependencies, there could be redundancy and anomalies.</li>
+        <li><strong>Normalization</strong> uses FDs to refine schemas and avoid these problems.</li>
+      </ul>
+      <p class="equation">Normal forms are the <b>rules</b> we apply during this process.</p>
+      <ul class="list">
+        <li><strong>Normal forms = design rules</strong> for good database schemas.</li>
+        <li>Each normal form is <strong>stricter</strong> than the previous one &mdash; a relation in 3NF is automatically in 2NF and 1NF.</li>
+        <li>In this lesson we study <strong>1NF, 2NF, 3NF, and BCNF.</strong></li>
+      </ul>
+      <p class="callout callout--warn"><strong>NOTE:</strong> In practice, not every database follows them strictly. But aiming for <strong>3NF/BCNF</strong> makes systems easier to maintain.</p>
+
+      <h3 class="sub">The ladder</h3>
+      <p class="hint">Tap a level to see what it demands.</p>
+      <figure class="figure">
+        <div class="stack" data-detail-target="#nfDetail">
+          <div class="stack__views">
+            <button class="lvl" type="button" data-detail="src-1nf" aria-expanded="false">1NF</button>
+            <button class="lvl" type="button" data-detail="src-2nf" aria-expanded="false">2NF</button>
+            <button class="lvl" type="button" data-detail="src-3nf" aria-expanded="false">3NF</button>
+            <button class="lvl" type="button" data-detail="src-bcnf" aria-expanded="false">BCNF</button>
+          </div>
+          <div class="detail" id="nfDetail">
+            <p class="detail__who">Each step assumes the one before it.</p>
+            <p>Select a normal form above to see the rule it adds.</p>
+          </div>
+        </div>
+        <figcaption>Each normal form keeps everything the previous one required and adds one more restriction.</figcaption>
+      </figure>
+
+      <div hidden>
+        <div id="src-1nf">
+          <p class="detail__who">First Normal Form</p>
+          <h4>Every value is atomic</h4>
+          <p>No sets, no repeating groups, no multi-valued cells. Columns have consistent domains and unique names, and the order of rows and columns carries no meaning.</p>
+        </div>
+        <div id="src-2nf">
+          <p class="detail__who">Second Normal Form</p>
+          <h4>No partial dependency</h4>
+          <p>In 1NF, and no non-prime attribute depends on only <em>part</em> of a composite key. A relation with a single-attribute key is automatically in 2NF.</p>
+        </div>
+        <div id="src-3nf">
+          <p class="detail__who">Third Normal Form</p>
+          <h4>No transitive dependency</h4>
+          <p>In 2NF, and no non-prime attribute is transitively dependent on the primary key. If A &rarr; B and B &rarr; C, then C hanging off A is what gets removed.</p>
+        </div>
+        <div id="src-bcnf">
+          <p class="detail__who">Boyce&ndash;Codd Normal Form</p>
+          <h4>Every determinant is a candidate key</h4>
+          <p>The strictest of the four. It closes the cases 3NF still allows, where a determinant that is not a candidate key sits on the left of a non-trivial FD.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 07 FIRST NORMAL FORM ============ -->
+    <section id="nf1" class="section">
+      <p class="section__num">07</p>
+      <h2>First Normal Form (1NF)</h2>
+      <p>A table is in <strong>1NF</strong> if and only if:</p>
+      <ol class="list">
+        <li>All <mark>attributes are atomic</mark> (single-valued). There should be no sets or repeating groups.</li>
+        <li>Attribute domains are consistent &mdash; the same type for all values in a column.</li>
+        <li>Each column has a unique name.</li>
+        <li>The order of rows and columns does not matter.</li>
+      </ol>
+
+      <h3 class="sub">Example 1 &middot; a multi-valued phone column</h3>
+      <p class="hint">Switch between the two states of the STUDENT relation.</p>
+      <div class="toggle" role="tablist" aria-label="1NF example 1">
+        <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="p1nf-before">Table 1 &middot; not in 1NF</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="p1nf-after">Table 2 &middot; in 1NF</button>
+      </div>
+      <div class="panel" id="p1nf-before">
+        <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NAME</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_PHONE</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_STATE</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_COUNTRY</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">RAM</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--maroon-tint); color:var(--maroon-dk); font-weight:700;">9716271721,<br>9871717178</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">HARYANA</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">INDIA</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">RAM</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">9898297281</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">PUNJAB</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">INDIA</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">SURESH</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">&mdash;</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">PUNJAB</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">INDIA</td>
+</tr>
+</tbody></table></div>
+        <p class="panel__use">STUD_PHONE holds two numbers in a single cell for student 1. That cell is not atomic, so the relation is not in 1NF.</p>
+      </div>
+      <div class="panel is-hidden" id="p1nf-after">
+        <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NAME</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_PHONE</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_STATE</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_COUNTRY</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">RAM</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--forest-tint); color:var(--forest); font-weight:700;">9716271721</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">HARYANA</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">INDIA</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">RAM</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--forest-tint); color:var(--forest); font-weight:700;">9871717178</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">HARYANA</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">INDIA</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">RAM</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">9898297281</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">PUNJAB</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">INDIA</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">SURESH</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">&mdash;</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">PUNJAB</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">INDIA</td>
+</tr>
+</tbody></table></div>
+        <p class="panel__use">The multi-valued attribute is split across rows. Nothing was lost &mdash; student 1 simply now has one row per phone number.</p>
+      </div>
+
+      <h3 class="sub">Example 2 &middot; a multi-valued course column</h3>
+      <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); align-items:start;"><div><p class="hint">Courses is multi-valued, so this is <strong>not</strong> in 1NF.</p><pre style="font-family:var(--mono); font-size:.8rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1rem; overflow-x:auto;">ID   Name   Courses
+------------------
+1    A      c1, c2
+2    E      c3
+3    M      c2, c3</pre></div><div><p class="hint">One course per row &mdash; no multi-valued attributes, so this <strong>is</strong> in 1NF.</p><pre style="font-family:var(--mono); font-size:.8rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1rem; overflow-x:auto;">ID   Name   Course
+------------------
+1    A      c1
+1    A      c2
+2    E      c3
+3    M      c2
+3    M      c3</pre></div></div>
+      <p class="callout callout--warn"><strong>NOTE:</strong> A database design is considered <strong>bad</strong> if it is not even in the First Normal Form.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Only the multi-valued cell and the mixed-domain column break 1NF."
+           data-no="Not quite. 1NF only cares about atomic values, consistent domains, unique column names, and the irrelevance of row and column order.">
+        <p class="activity__prompt">Tap every table below that would <strong>fail</strong> 1NF.</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">A Skills column containing &ldquo;PHP, MySQL, Git&rdquo; in one cell</button>
+          <button class="chip" type="button">A table whose rows come back in a different order each query</button>
+          <button class="chip" type="button" data-correct="true">A Birthdate column holding &ldquo;1999-04-02&rdquo; in some rows and &ldquo;unknown&rdquo; in others</button>
+          <button class="chip" type="button" data-correct="true">A table with two columns both named Address</button>
+          <button class="chip" type="button">A table where the same StudentID appears in several rows</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 08 SECOND NORMAL FORM ============ -->
+    <section id="nf2" class="section">
+      <p class="section__num">08</p>
+      <h2>Second Normal Form (2NF)</h2>
+      <div class="split">
+        <div>
+          <ul class="list">
+            <li>2NF is based on the idea of <mark>full functional dependency</mark>.</li>
+            <li>It applies to relations with <mark>composite keys</mark> &mdash; relations whose primary key is composed of two or more attributes.</li>
+            <li>A relation with a <strong>single-attribute key is automatically in 2NF.</strong></li>
+          </ul>
+          <div class="definition">
+            <p class="definition__tag">2NF</p>
+            <p>A relation is in 2NF if it is already in <strong>1NF</strong>, and it has <strong>no partial dependency</strong> &mdash; no non-prime attribute depends on just <em>part</em> of a composite key.</p>
+          </div>
+        </div>
+        <aside class="remember">
+          <h3>Prime vs non-prime</h3>
+          <ul>
+            <li><b>Prime attribute</b> &mdash; part of some candidate key</li>
+            <li><b>Non-prime attribute</b> &mdash; part of none</li>
+            <li>2NF only ever complains about non-prime attributes</li>
+          </ul>
+        </aside>
+      </div>
+
+      <h3 class="sub">Example 1 &middot; course fees</h3>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">COURSE_NO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">COURSE_FEE</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">1000</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1500</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C4</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2000</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">4</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">1000</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">4</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">1000</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C5</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2000</td>
+</tr>
+</tbody></table></div>
+      <p class="hint">Note that many courses have the same course fee. Tap each observation to see what it rules out.</p>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">COURSE_FEE cannot alone decide COURSE_NO or STUD_NO</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Fee 1000 appears against C1, C3, and C1 again &mdash; so knowing the fee tells you nothing about which course or which student.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">COURSE_FEE together with STUD_NO cannot decide COURSE_NO</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Student 4 has two rows at fee 1000, one for C3 and one for C1. The pair does not identify a course.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">COURSE_FEE together with COURSE_NO cannot decide STUD_NO</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>C1 at fee 1000 belongs to both student 1 and student 4.</p></div>
+        </div>
+      </div>
+      <p>Hence <strong>COURSE_FEE is a non-prime attribute</strong>: it does not belong to the one and only candidate key <strong>{STUD_NO, COURSE_NO}</strong>.</p>
+      <p class="callout callout--warn">However, <strong>COURSE_NO &rarr; COURSE_FEE.</strong> COURSE_FEE is dependent on COURSE_NO, which is a <em>proper subset</em> of the candidate key. A non-prime attribute depending on a proper subset of the candidate key is a <strong>partial dependency</strong> &mdash; so this relation is <strong>not in 2NF.</strong></p>
+      <p>To convert it to 2NF we split the table in two:</p>
+      <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); align-items:start;"><div><p class="hint">Table 1</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">COURSE_NO</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C2</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C4</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">4</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C3</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">4</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C5</td>
+</tr>
+</tbody></table></div></div><div><p class="hint">Table 2</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">COURSE_NO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">COURSE_FEE</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1000</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1500</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1000</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C4</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2000</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">C5</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2000</td>
+</tr>
+</tbody></table></div></div></div>
+
+      <h3 class="sub">Example 2 &middot; when there is nothing to fix</h3>
+      <p>Consider the following functional dependencies in relation <strong>R (A, B, C, D)</strong>:</p>
+      <pre style="font-family:var(--mono); font-size:.8rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1rem; overflow-x:auto;">AB -&gt; C   [A and B together determine C]
+BC -&gt; D   [B and C together determine D]</pre>
+      <p>In this relation, <strong>AB</strong> is the only candidate key and there is <strong>no partial dependency</strong> &mdash; any proper subset of AB (that is, A alone or B alone) does not determine any non-prime attribute. The relation is already in 2NF.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Partial dependency needs a composite key, a non-prime attribute, and a determinant that is only part of that key."
+           data-no="Not quite. Re-read the definition: a partial dependency is a non-prime attribute depending on a proper subset of a composite candidate key.">
+        <p class="activity__prompt">Which statements about <strong>2NF</strong> are true?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">A relation whose primary key is a single attribute is automatically in 2NF</button>
+          <button class="chip" type="button">A relation in 2NF can still contain multi-valued cells</button>
+          <button class="chip" type="button" data-correct="true">Partial dependency is only possible when the key is composite</button>
+          <button class="chip" type="button" data-correct="true">2NF fixes partial dependencies by splitting the relation into two tables</button>
+          <button class="chip" type="button">2NF removes transitive dependencies</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 09 THIRD NORMAL FORM ============ -->
+    <section id="nf3" class="section">
+      <p class="section__num">09</p>
+      <h2>Third Normal Form (3NF)</h2>
+      <p>A relation is in 3NF if there is <strong>no transitive dependency for non-prime attributes</strong>, as well as it being in the second normal form.</p>
+      <p>Equivalently, a relation is in 3NF if at least one of the following conditions holds in every non-trivial functional dependency <strong>X &rarr; Y</strong>:</p>
+      <ol class="list">
+        <li><strong>X is a super key</strong>, or</li>
+        <li><strong>Y is a prime attribute</strong> &mdash; each element of Y is part of some candidate key.</li>
+      </ol>
+      <div class="definition">
+        <p class="definition__tag">In other words</p>
+        <p>A relation that is in First and Second Normal Form, and in which <strong>no non-primary-key attribute is transitively dependent on the primary key</strong>, is in Third Normal Form.</p>
+      </div>
+      <p class="callout callout--warn"><strong>NOTE:</strong> If A &rarr; B and B &rarr; C are two FDs, then A &rarr; C is called a <mark>transitive dependency</mark>. Normalizing 2NF relations to 3NF involves the <mark>removal of transitive dependencies</mark>. If one exists, we remove the transitively dependent attribute(s) from the relation by placing them in a new relation along with a copy of the determinant.</p>
+
+      <h3 class="sub">Example 1 &middot; state and country</h3>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_NAME</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_STATE</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_COUNTRY</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">STUD_AGE</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">RAM</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">HARYANA</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--maroon-tint); color:var(--maroon-dk); font-weight:700;">INDIA</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">20</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">RAM</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">PUNJAB</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--maroon-tint); color:var(--maroon-dk); font-weight:700;">INDIA</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">19</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">SURESH</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">PUNJAB</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--maroon-tint); color:var(--maroon-dk); font-weight:700;">INDIA</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">21</td>
+</tr>
+</tbody></table></div>
+      <p><strong>FD set:</strong> {STUD_NO &rarr; STUD_NAME, STUD_NO &rarr; STUD_STATE, STUD_STATE &rarr; STUD_COUNTRY, STUD_NO &rarr; STUD_AGE}<br>
+      <strong>Candidate key:</strong> {STUD_NO}</p>
+      <figure class="figure">
+        <div class="stack">
+          <div class="stack__views">
+            <span class="lvl">STUD_NO</span>
+            <span class="lvl">STUD_STATE</span>
+            <span class="lvl">STUD_COUNTRY</span>
+          </div>
+          <p class="hint" style="margin:0;">STUD_NO &rarr; STUD_STATE &rarr; STUD_COUNTRY</p>
+        </div>
+        <figcaption>STUD_COUNTRY is transitively dependent on STUD_NO. It reaches the key only through STUD_STATE &mdash; and that violates 3NF.</figcaption>
+      </figure>
+      <p>To convert it into third normal form, we decompose STUDENT (STUD_NO, STUD_NAME, STUD_PHONE, STUD_STATE, STUD_COUNTRY, STUD_AGE) as:</p>
+      <pre style="font-family:var(--mono); font-size:.8rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1rem; overflow-x:auto;">STUDENT (<u>STUD_NO</u>, STUD_NAME, STUD_PHONE, STUD_STATE, STUD_AGE)
+STATE_COUNTRY (<u>STATE</u>, COUNTRY)</pre>
+      <p class="hint">The determinant, STUD_STATE, stays in both relations &mdash; that is what lets us join them back together.</p>
+
+      <h3 class="sub">Example 2 &middot; all right-hand sides prime</h3>
+      <p>Consider relation <strong>R(A, B, C, D, E)</strong>:</p>
+      <pre style="font-family:var(--mono); font-size:.8rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1rem; overflow-x:auto;">A  -&gt; BC,
+CD -&gt; E,
+B  -&gt; D,
+E  -&gt; A</pre>
+      <p>All possible candidate keys in the above relation are <strong>{A, E, CD, BC}.</strong> Every attribute on the right-hand side of a functional dependency is prime, so the second 3NF condition is satisfied everywhere and the relation is in 3NF.</p>
+      <p class="callout callout--note"><strong>Note:</strong> Third Normal Form is considered adequate for normal relational database design, because most 3NF tables are free of insertion, update, and deletion anomalies. Moreover, 3NF always ensures functional-dependency preservation and losslessness.</p>
+    </section>
+
+    <!-- ============ 10 BOYCE-CODD NORMAL FORM ============ -->
+    <section id="bcnf" class="section">
+      <p class="section__num">10</p>
+      <h2>Boyce&ndash;Codd Normal Form (BCNF)</h2>
+      <p>The Boyce&ndash;Codd Normal Form is based on functional dependencies that take into account <strong>all candidate keys</strong> in a relation.</p>
+      <div class="definition">
+        <p class="definition__tag">BCNF</p>
+        <p>A relation is in BCNF if and only if <mark>every determinant is a candidate key.</mark></p>
+      </div>
+      <p>To test whether a relation is in BCNF, we <strong>identify all the determinants</strong> and make sure that they are candidate keys.</p>
+
+      <h3 class="sub">Where BCNF differs from 3NF</h3>
+      <div class="types">
+        <article class="type">
+          <p class="type__tag">3NF allows two escapes</p>
+          <h3>X &rarr; Y passes if&hellip;</h3>
+          <p>X is a super key, <strong>or</strong> Y is a prime attribute. That second escape is what lets a determinant sit on the left without being a candidate key.</p>
+        </article>
+        <article class="type type--focus">
+          <p class="type__tag">BCNF allows one</p>
+          <h3>X &rarr; Y passes only if&hellip;</h3>
+          <p>X is a candidate key. The prime-attribute escape is closed, which is exactly why BCNF is stricter than 3NF and why every BCNF relation is also in 3NF.</p>
+        </article>
+      </div>
+      <p class="callout callout--note">Because of this, the two forms only ever disagree on relations with more than one candidate key that overlap. For a relation with a single candidate key, 3NF and BCNF ask for the same thing.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. BCNF checks every determinant against the candidate keys, nothing else."
+           data-no="Not quite. BCNF says only one thing: every determinant must be a candidate key. Everything else follows from that.">
+        <p class="activity__prompt">Which of the following are true of <strong>BCNF</strong>?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">It takes all candidate keys into account, not just the primary key</button>
+          <button class="chip" type="button" data-correct="true">Testing it means listing every determinant and checking it is a candidate key</button>
+          <button class="chip" type="button">A relation in BCNF may still have a partial dependency</button>
+          <button class="chip" type="button" data-correct="true">Every relation in BCNF is also in 3NF</button>
+          <button class="chip" type="button">BCNF is weaker than 3NF</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11 FOURTH & FIFTH NORMAL FORMS ============ -->
+    <section id="nf45" class="section">
+      <p class="section__num">11</p>
+      <h2>Fourth &amp; Fifth Normal Forms</h2>
+      <p>These normal forms are <strong>less used</strong>, and this course does not treat them in detail. You can read on them here:</p>
+      <p class="callout callout--note">&ldquo;Introduction of 4th and 5th Normal Form in DBMS.&rdquo; <em>GeeksforGeeks</em>, 2 Feb. 2022, <a href="https://www.geeksforgeeks.org/introduction-of-4th-and-5th-normal-form-in-dbms/">geeksforgeeks.org/introduction-of-4th-and-5th-normal-form-in-dbms</a>.</p>
+    </section>
+
+    <!-- ============ 12 DECOMPOSITION ============ -->
+    <section id="decomp" class="section">
+      <p class="section__num">12</p>
+      <h2>Normalization &amp; Table Decomposition</h2>
+      <p>You now know what normal forms are, and the examples above have given you an idea of how to transform schemas so that they respect those forms. Every one of those transformations was the same move under a different name.</p>
+      <div class="definition">
+        <p class="definition__tag">Decomposition</p>
+        <p><mark>Decomposition is the process of replacing a relation with a collection of smaller relations.</mark></p>
+      </div>
+      <p>Decomposition should be <strong>lossless.</strong> The information in the original relation should be accurately reconstructible from the decomposed relations &mdash; otherwise we have traded redundancy for something worse.</p>
+      <p class="callout callout--warn">Splitting a table is easy. Splitting it so that the join puts it back together exactly &mdash; no lost rows, no invented ones &mdash; is the part that needs a rule.</p>
+    </section>
+
+    <!-- ============ 13 LOSSLESS DECOMPOSITION & HEATH ============ -->
+    <section id="heath" class="section">
+      <p class="section__num">13</p>
+      <h2>Lossless Decomposition &amp; Heath&rsquo;s Theorem</h2>
+      <p>Let <em>R(A<sub>1</sub>, A<sub>2</sub>, &hellip;, A<sub>n</sub>)</em> be a relation. Let</p>
+      <p class="equation">
+        R<sub>1</sub> = &pi;[A<sub>1</sub>, A<sub>2</sub>, &hellip;, A<sub>i</sub>] R,<br>
+        R<sub>2</sub> = &pi;[A<sub>i</sub>, &hellip;, A<sub>j</sub>] R, &nbsp;&hellip;<br>
+        R<sub>k</sub> = &pi;[A<sub>l</sub>, &hellip;, A<sub>n</sub>] R, &nbsp;&hellip;
+      </p>
+      <p>If <strong>R<sub>1</sub> * R<sub>2</sub> * &hellip; * R<sub>k</sub> = R</strong>, then we say this is a decomposition of <em>R</em> <strong>without loss of information.</strong> Queries on <em>R</em> and on its decomposition would give the same result.</p>
+
+      <h3 class="sub">Heath&rsquo;s theorem</h3>
+      <div class="split">
+        <div>
+          <p>Heath&rsquo;s theorem can guide us in table decomposition. It says that if relation <em>R(X, Y, Z)</em> satisfies a functional dependency <strong>X &rarr; Y</strong>, the relation can always be decomposed without loss of information into:</p>
+          <p class="equation">R<sub>1</sub> = &pi;[X, Y]<br>R<sub>2</sub> = &pi;[X, Z]</p>
+          <p class="hint">The determinant X appears in both halves. That shared column is what the join uses, and it is why nothing is lost.</p>
+        </div>
+        <aside class="remember">
+          <h3>Reading the theorem</h3>
+          <ul>
+            <li><b>X</b> &mdash; the determinant, kept in both</li>
+            <li><b>Y</b> &mdash; what X determines, moved out</li>
+            <li><b>Z</b> &mdash; everything else, stays behind</li>
+          </ul>
+        </aside>
+      </div>
+
+      <h3 class="sub">Worked example</h3>
+      <p>Relation <strong>R</strong>, where StudentNO plays the role of X, Program the role of Y, and GraduationYR the role of Z:</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">StudentNO &nbsp;<span style="color:var(--maroon)">X</span></th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Program &nbsp;<span style="color:var(--maroon)">Y</span></th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">GraduationYR &nbsp;<span style="color:var(--maroon)">Z</span></th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2014-12345</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">BAMS</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2019</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2012-12346</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">DCS</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2014</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2013-12347</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">MIS</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2015</td>
+</tr>
+</tbody></table></div>
+      <p>Since <strong>StudentNO &rarr; Program</strong>, we can decompose R as follows, without loss of information:</p>
+      <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); align-items:start;"><div><p class="hint">R<sub>1</sub> = &pi;[X, Y]</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">StudentNO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Program</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2014-12345</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">BAMS</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2012-12346</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">DCS</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2013-12347</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">MIS</td>
+</tr>
+</tbody></table></div></div><div><p class="hint">R<sub>2</sub> = &pi;[X, Z]</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">StudentNO</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">GraduationYR</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2014-12345</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2019</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2012-12346</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2014</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2013-12347</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2015</td>
+</tr>
+</tbody></table></div></div></div>
+      <p class="hint">Join R<sub>1</sub> and R<sub>2</sub> on StudentNO and you get the original three rows back &mdash; no more, no fewer.</p>
+      <p class="callout callout--note">Look back at 3NF Example 1 and you will see the same theorem at work: STUD_STATE &rarr; STUD_COUNTRY, so STATE_COUNTRY(STATE, COUNTRY) splits off while STATE stays behind in STUDENT.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Heath's theorem needs an FD X to Y, keeps X in both relations, and guarantees the join reconstructs R exactly."
+           data-no="Not quite. The theorem depends on the FD X to Y and on X appearing in both halves of the decomposition.">
+        <p class="activity__prompt">R(X, Y, Z) satisfies X &rarr; Y. Which statements about decomposing it into &pi;[X, Y] and &pi;[X, Z] are true?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">X appears in both resulting relations</button>
+          <button class="chip" type="button" data-correct="true">Joining the two relations reconstructs R exactly</button>
+          <button class="chip" type="button">The decomposition works whether or not X &rarr; Y holds</button>
+          <button class="chip" type="button" data-correct="true">Queries on R and on the decomposition return the same answers</button>
+          <button class="chip" type="button">Y and Z end up together in the same relation</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li><strong>Normalization</strong> transforms a relational model into an equivalent one that follows rules which avoid redundancy, making the database easier to maintain and query.</li>
+        <li>Redundancy causes <strong>update, insertion, and deletion anomalies</strong> &mdash; the practical reason normalization exists.</li>
+        <li>A <strong>functional dependency X &rarr; Y</strong> says that if two tuples agree on X they must agree on Y. FDs are declared by the designer from domain knowledge, not discovered from the current rows.</li>
+        <li>The <strong>determinant</strong> is the left-hand side of an FD; a <strong>candidate key</strong> is a determinant that determines all attributes of the relation.</li>
+        <li><strong>1NF:</strong> all attributes atomic, consistent domains, unique column names, and row/column order insignificant.</li>
+        <li><strong>2NF:</strong> in 1NF with <strong>no partial dependency.</strong> Only relations with composite keys can violate it.</li>
+        <li><strong>3NF:</strong> in 2NF with <strong>no transitive dependency</strong> for non-prime attributes &mdash; equivalently, in every non-trivial X &rarr; Y, X is a super key or Y is prime.</li>
+        <li><strong>BCNF:</strong> <strong>every determinant is a candidate key.</strong> Stricter than 3NF, which is why every BCNF relation is also in 3NF.</li>
+        <li><strong>Decomposition</strong> replaces a relation with smaller ones, and must be <strong>lossless</strong>: R<sub>1</sub> * R<sub>2</sub> * &hellip; * R<sub>k</sub> = R.</li>
+        <li><strong>Heath&rsquo;s theorem:</strong> if R(X, Y, Z) satisfies X &rarr; Y, then &pi;[X, Y] and &pi;[X, Z] is always a lossless decomposition.</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="Topic2-Part2.html">&larr; Part 2</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <span class="pager__spacer"></span>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Normalization,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Examples follow the course deck; 1NF, 2NF, and 3NF worked examples after GeeksforGeeks, <em>Normal Forms in DBMS.</em></p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "In the Delivery table, SupplierTown is stored once for every delivery a supplier makes. If S1 moves from Manila to Quezon City, we must edit several rows. What is this problem called?",
+    "options": ["Insertion anomaly", "Update anomaly", "Deletion anomaly", "Partial dependency"],
+    "answer": 1,
+    "why": "An <strong>update anomaly</strong> is exactly this: one real-world fact is stored in many rows, so changing it means changing every copy &mdash; and missing one leaves the database inconsistent."
+  },
+  {
+    "stem": "Which statement correctly completes the definition of X &rarr; Y?",
+    "options": [
+      "If two tuples have the same value of Y, they must have the same value of X",
+      "If two tuples have the same value of X, they must also have the same value of Y",
+      "X and Y must always contain exactly one attribute each",
+      "X and Y must have no attributes in common"
+    ],
+    "answer": 1,
+    "why": "Formally, &forall;t<sub>1</sub>, t<sub>2</sub> : t<sub>1</sub>[X] = t<sub>2</sub>[X] &rArr; t<sub>1</sub>[Y] = t<sub>2</sub>[Y]. Knowing X gives us Y &mdash; not the other way round."
+  },
+  {
+    "stem": "Why is {DeliveryId} &rarr; {DeliveryId, SupplierId, SupplierTown, ProductId, ProductType, Quantity} called a trivial FD?",
+    "options": [
+      "Because DeliveryId is not a candidate key",
+      "Because it can be derived by transitivity from other FDs",
+      "Because everything on the left is already included on the right",
+      "Because it involves more than three attributes"
+    ],
+    "answer": 2,
+    "why": "A <strong>trivial FD</strong> is one where the left-hand side already appears on the right-hand side. It holds automatically and tells us nothing new."
+  },
+  {
+    "stem": "Which of these is TRUE about functional dependencies?",
+    "options": [
+      "They can always be inferred by inspecting the current rows of a table",
+      "They are enforced by the DBMS and cannot exist without it",
+      "They depend on the schema and are declared by the designer using domain knowledge",
+      "They change every time the data in the table changes"
+    ],
+    "answer": 2,
+    "why": "FDs are part of the <strong>semantics of the data.</strong> They depend on the schema, not on a particular state of the database, and you cannot always infer them just by looking at the current tuples."
+  },
+  {
+    "stem": "A STUDENT table stores \"9716271721, 9871717178\" in a single STUD_PHONE cell. Which normal form does this break, and why?",
+    "options": [
+      "2NF, because of a partial dependency",
+      "1NF, because the attribute is not atomic",
+      "3NF, because of a transitive dependency",
+      "BCNF, because the determinant is not a candidate key"
+    ],
+    "answer": 1,
+    "why": "1NF requires every attribute to be <strong>atomic</strong> &mdash; single-valued, with no sets or repeating groups. A design that is not even in 1NF is considered a bad design."
+  },
+  {
+    "stem": "In a relation with candidate key {STUD_NO, COURSE_NO}, the FD COURSE_NO &rarr; COURSE_FEE holds. What does this make the relation?",
+    "options": [
+      "In 2NF, because COURSE_NO is part of the key",
+      "Not in 2NF, because a non-prime attribute depends on part of the composite key",
+      "Not in 1NF, because COURSE_FEE repeats across rows",
+      "In BCNF, because COURSE_NO is a determinant"
+    ],
+    "answer": 1,
+    "why": "COURSE_FEE is non-prime and COURSE_NO is a <em>proper subset</em> of the candidate key. That is a <strong>partial dependency</strong>, so the relation is not in 2NF. The fix is to split it into (STUD_NO, COURSE_NO) and (COURSE_NO, COURSE_FEE)."
+  },
+  {
+    "stem": "Relation R(A, B, C, D) has AB as its only candidate key, with AB &rarr; C and BC &rarr; D. Is R in 2NF?",
+    "options": [
+      "No, because BC &rarr; D is a partial dependency",
+      "No, because D is a non-prime attribute",
+      "Yes, because no proper subset of AB determines any non-prime attribute",
+      "Yes, because every relation with four attributes is in 2NF"
+    ],
+    "answer": 2,
+    "why": "Partial dependency means a non-prime attribute depending on a <em>proper subset</em> of the key &mdash; here, on A alone or B alone. Neither does, so R is in 2NF."
+  },
+  {
+    "stem": "STUDENT has STUD_NO &rarr; STUD_STATE and STUD_STATE &rarr; STUD_COUNTRY, with {STUD_NO} as the candidate key. What is the correct 3NF decomposition?",
+    "options": [
+      "Leave the table as is &mdash; it is already in 3NF",
+      "STUDENT(STUD_NO, STUD_NAME, STUD_PHONE, STUD_STATE, STUD_AGE) and STATE_COUNTRY(STATE, COUNTRY)",
+      "STUDENT(STUD_NO, STUD_NAME, STUD_AGE) and STATE_COUNTRY(STUD_NO, COUNTRY)",
+      "STUDENT(STUD_NO, STUD_COUNTRY) and STATE_COUNTRY(STATE, COUNTRY)"
+    ],
+    "answer": 1,
+    "why": "STUD_COUNTRY is <strong>transitively dependent</strong> on STUD_NO through STUD_STATE. We move it into a new relation together with a copy of its determinant, STUD_STATE &mdash; which is what lets the two tables be joined back together."
+  },
+  {
+    "stem": "Which condition must hold for a relation to be in BCNF?",
+    "options": [
+      "Every determinant is a candidate key",
+      "Every non-prime attribute is fully dependent on the primary key",
+      "Every attribute is atomic",
+      "Every candidate key is a single attribute"
+    ],
+    "answer": 0,
+    "why": "BCNF takes <strong>all</strong> candidate keys into account: a relation is in BCNF if and only if every determinant is a candidate key. 3NF still permits a determinant that is not a candidate key when the dependent attribute is prime."
+  },
+  {
+    "stem": "R(X, Y, Z) satisfies X &rarr; Y. According to Heath's theorem, which decomposition is guaranteed to be lossless?",
+    "options": [
+      "&pi;[X, Y] and &pi;[Y, Z]",
+      "&pi;[X, Y] and &pi;[X, Z]",
+      "&pi;[X, Z] and &pi;[Y, Z]",
+      "&pi;[X] and &pi;[Y, Z]"
+    ],
+    "answer": 1,
+    "why": "Heath&rsquo;s theorem says R can always be decomposed into <strong>R<sub>1</sub> = &pi;[X, Y]</strong> and <strong>R<sub>2</sub> = &pi;[X, Z]</strong>. The determinant X stays in both relations, which is what makes the join reconstruct R exactly."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

@@ -1,0 +1,1199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 4 &middot; Relational Algebra &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic4">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 4</p>
+  <h1>Relational Algebra</h1>
+  <p class="hero__lede">Normalization gave us clean tables. Relational algebra is the formal language that gets meaning back out of them &mdash; eight operators, each one taking relations in and handing a new relation back.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>13</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic4</p>
+    <ol class="rail__list">
+      <li><a href="#where" class="rail__link"><span>01</span> Where We Are</a></li>
+      <li><a href="#what" class="rail__link"><span>02</span> What It Is &amp; Why It Matters</a></li>
+      <li><a href="#concepts" class="rail__link"><span>03</span> Review of Key Concepts</a></li>
+      <li><a href="#operators" class="rail__link"><span>04</span> The Operators</a></li>
+      <li><a href="#select" class="rail__link"><span>05</span> SELECT &sigma;</a></li>
+      <li><a href="#project" class="rail__link"><span>06</span> PROJECT &pi;</a></li>
+      <li><a href="#rowscols" class="rail__link"><span>07</span> Rows vs Columns</a></li>
+      <li><a href="#rename" class="rail__link"><span>08</span> RENAME &rho;</a></li>
+      <li><a href="#sets" class="rail__link"><span>09</span> Set Operations</a></li>
+      <li><a href="#cross" class="rail__link"><span>10</span> CROSS PRODUCT &times;</a></li>
+      <li><a href="#join" class="rail__link"><span>11</span> JOIN &#8904;</a></li>
+      <li><a href="#division" class="rail__link"><span>12</span> DIVISION &divide;</a></li>
+      <li><a href="#extras" class="rail__link"><span>13</span> Additional Operations</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 WHERE WE ARE ============ -->
+    <section id="where" class="section">
+      <p class="section__num">01</p>
+      <h2>Where We Are</h2>
+      <div class="split">
+        <div>
+          <p>We&rsquo;ve learned how to:</p>
+          <ul class="list">
+            <li>Represent data using <strong>Entity-Relationship models</strong>;</li>
+            <li>Transform models into <strong>relational schemas</strong>;</li>
+            <li>Refine schemas using <strong>normalization.</strong></li>
+          </ul>
+          <p class="equation">Now we can move from <b>designing</b> databases to <b>querying</b> them &mdash; conceptually.</p>
+
+          <h3 class="sub">Learning outcomes</h3>
+          <ul class="list">
+            <li>Explain what relational algebra is and its role in databases;</li>
+            <li>Identify and describe the basic operators;</li>
+            <li>Use relational algebra to express queries over relational data; and</li>
+            <li>Relate relational algebra to the next topic: SQL.</li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Unary: &sigma;, &pi;, &rho;</li>
+            <li>Binary: &cup;, &cap;, &minus;, &times;, &#8904;</li>
+            <li>Type compatibility</li>
+            <li>Theta, equi, and natural joins</li>
+            <li>Division and outer joins</li>
+          </ul>
+        </aside>
+      </div>
+
+      <figure class="figure">
+        <div class="stack">
+          <div class="stack__views">
+            <span class="lvl">ERD</span>
+            <span class="lvl">Relational Schema</span>
+            <span class="lvl">Normalization</span>
+            <span class="lvl" aria-expanded="true">Relational Algebra</span>
+            <span class="lvl">SQL</span>
+          </div>
+        </div>
+        <figcaption>The course pipeline. Everything before this point built the schema; everything after it queries the schema.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ 02 WHAT & WHY ============ -->
+    <section id="what" class="section">
+      <p class="section__num">02</p>
+      <h2>What It Is &amp; Why It Matters</h2>
+      <div class="definition">
+        <p class="definition__tag">Relational algebra</p>
+        <p>A <mark>formal language for manipulating relations.</mark> It describes how data can be retrieved and combined, using mathematical operations on relations (tables). <strong>Each operation produces a new relation as output.</strong></p>
+      </div>
+      <p class="callout callout--note"><strong>Normalization</strong> helped us build clean tables. <strong>Relational algebra</strong> helps us use those tables to retrieve meaning.</p>
+      <p>That closure property &mdash; relation in, relation out &mdash; is what lets operators be chained. The output of one becomes the operand of the next, which is why a single expression can answer a complicated question.</p>
+
+      <h3 class="sub">Why study it</h3>
+      <p class="hint">Tap each reason to see what it buys you.</p>
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Foundation</b> of SQL</span>
+          <span class="quad__short">the theory the language sits on</span>
+          <span class="quad__long">Every SELECT statement you will write in the next topic decomposes into the operators on this page. Learning them now means SQL arrives as notation, not as a new idea.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Retrieval</b> under the hood</span>
+          <span class="quad__short">what the DBMS actually does</span>
+          <span class="quad__long">It defines how data retrieval works beneath the surface &mdash; which tuples are scanned, which are combined, and in what order.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Optimization</b></span>
+          <span class="quad__short">rewriting a query into a faster one</span>
+          <span class="quad__long">Because the operators obey algebraic laws, the DBMS can rewrite an expression into an equivalent but cheaper one &mdash; pushing a selection before a join, for instance &mdash; and know the answer is unchanged.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Correctness</b></span>
+          <span class="quad__short">reasoning about what a query returns</span>
+          <span class="quad__long">It gives you a way to argue that a query returns exactly the rows you meant, and to compare two queries for equivalence and efficiency.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ 03 REVIEW OF KEY CONCEPTS ============ -->
+    <section id="concepts" class="section">
+      <p class="section__num">03</p>
+      <h2>Review of Key Concepts</h2>
+      <p>Relational algebra operates on the vocabulary from Topic 2. Tap each term to see its definition and an example.</p>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Relation</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A table that represents a set of data about a single entity type or relationship. It has a name and a set of attributes (columns). <em>Example:</em> <code>Student(student_id, name, email)</code></p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Tuple</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A row in a relation; represents one instance or record. Each tuple is unique within a relation. <em>Example:</em> <code>(2023001, "Ria Borromeo", "rhborromeo@up.edu.ph")</code></p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Attribute</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A column in a relation; describes one property of the entity. Each attribute has a name and a defined domain, the set of valid values. <em>Example:</em> <code>student_id</code>, <code>name</code>, <code>email</code></p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">Domain</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>The set of allowed values for an attribute. <em>Example:</em> for <code>grade</code>, the domain could be {1.00, 1.25, 1.50, 1.75, 2.00, &hellip;, 3.00, 5.00}</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">5</span><span class="acc__title">Schema</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>The structure or definition of a relation &mdash; its name and attributes. <em>Example:</em> <code>Student(student_id, name, email)</code></p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">6</span><span class="acc__title">Instance</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>The actual data &mdash; the set of tuples in a relation at a given time. <em>Example:</em> the rows currently stored in <code>Student</code>.</p></div>
+        </div>
+      </div>
+      <p class="callout callout--note">Schema and instance are the pair worth keeping apart: an operator is defined against the <strong>schema</strong>, but it runs against the <strong>instance.</strong> That is why we can reason about a query before a single row exists.</p>
+    </section>
+
+    <!-- ============ 04 THE OPERATORS ============ -->
+    <section id="operators" class="section">
+      <p class="section__num">04</p>
+      <h2>The Operators</h2>
+      <p>The operators divide into two families by how many relations they take as operands.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Type</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Operators</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Purpose</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;"><b>Unary</b></td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Select (&sigma;), Project (&pi;), Rename (&rho;)</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Act on one relation</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;"><b>Binary</b></td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Union (&cup;), Intersection (&cap;), Difference (&minus;), Product (&times;), Join (&#8904;)</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Combine relations</td>
+</tr>
+</tbody></table></div>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">one operand</p>
+          <h3>Unary</h3>
+          <p><strong>Select (&sigma;), Project (&pi;), Rename (&rho;).</strong> These act on a single relation, cutting it down or relabelling it.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">two operands</p>
+          <h3>Binary</h3>
+          <p><strong>Union (&cup;), Intersection (&cap;), Difference (&minus;), Product (&times;), Join (&#8904;).</strong> These combine two relations into one.</p>
+        </article>
+      </div>
+      <p class="callout callout--warn">Whichever family an operator belongs to, the result is always a <strong>relation</strong> &mdash; never a single value, never a loose set of rows. That is what makes expressions composable.</p>
+    </section>
+
+    <!-- ============ 05 SELECT ============ -->
+    <section id="select" class="section">
+      <p class="section__num">05</p>
+      <h2>SELECT &mdash; &sigma;</h2>
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>The select operation is used to obtain a <mark>subset of the tuples</mark> from a relation &mdash; all the tuples satisfying a selection condition.</p>
+      </div>
+      <p>Suppose we need a list of male employees:</p>
+      <p class="equation">MALES &larr; &sigma;<sub>Sex = "M"</sub> (EMPLOYEE)</p>
+      <figure class="figure">
+        <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Fname</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Lname</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Sex</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">SSN</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Franklin</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Wong</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">M</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">333445555</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Jennifer</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Wallace</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">F</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">987654321</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Ramesh</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Narayan</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">M</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">666884444</td>
+</tr>
+</tbody></table></div>
+        <figcaption>The highlighted rows are the ones &sigma; keeps. Every column comes along &mdash; select never touches the schema.</figcaption>
+      </figure>
+
+      <h3 class="sub">Syntax</h3>
+      <p class="equation" style="font-size:1.1rem;">&sigma;<sub>condition</sub>(RELATION)</p>
+      <p>A <strong>condition</strong> is built from:</p>
+      <pre style="font-family:var(--mono); font-size:.8rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1rem; overflow-x:auto;">&lt;attributename&gt; &lt;comparisonoperator&gt; &lt;attributename&gt;
+&lt;attributename&gt; &lt;comparisonoperator&gt; &lt;constant&gt;
+&lt;condition&gt; AND/OR &lt;condition&gt;
+NOT &lt;condition&gt;</pre>
+      <p><strong>Examples:</strong> <code>Sex = "M"</code>; <code>Age &lt; 40</code>; <code>Sex = "M" AND Age &lt; 40</code>; <code>Sex = "M" AND (Age &lt; 40 OR Rich = True)</code></p>
+      <p>A <strong>RELATION</strong> is either a relation name or another relational algebra expression &mdash; which is how selections nest inside larger queries.</p>
+
+      <h3 class="sub">Other points about SELECT</h3>
+      <ul class="list">
+        <li>It selects tuples satisfying a condition.</li>
+        <li>The resulting relation has the <mark>same schema</mark> as the operand.</li>
+        <li>The resulting relation&rsquo;s <mark>population is less than or equal to</mark> that of the operand.</li>
+      </ul>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Select keeps the schema intact and can only ever return the same number of rows or fewer."
+           data-no="Not quite. Select works on rows only: same columns, same or fewer rows.">
+        <p class="activity__prompt">Which statements about <strong>&sigma;</strong> are true?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">The result has exactly the same attributes as the operand</button>
+          <button class="chip" type="button">The result always has fewer rows than the operand</button>
+          <button class="chip" type="button" data-correct="true">The result may have as many rows as the operand</button>
+          <button class="chip" type="button" data-correct="true">Its operand can be another relational algebra expression</button>
+          <button class="chip" type="button">It removes duplicate rows from the result</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 06 PROJECT ============ -->
+    <section id="project" class="section">
+      <p class="section__num">06</p>
+      <h2>PROJECT &mdash; &pi;</h2>
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>The project operation is used to obtain a <mark>subset of the attributes</mark> from a relation.</p>
+      </div>
+      <p>Suppose we need the first name and SSN of all employees:</p>
+      <p class="equation">NAMES &larr; &pi;<sub>Fname, SSN</sub> (EMPLOYEE)</p>
+      <figure class="figure">
+        <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Fname</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Lname</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Sex</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">SSN</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Franklin</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Wong</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">M</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">333445555</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Jennifer</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Wallace</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">F</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">987654321</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">Ramesh</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Narayan</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">M</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--gold-tint);">666884444</td>
+</tr>
+</tbody></table></div>
+        <figcaption>The highlighted columns are the ones &pi; keeps. Every row comes along &mdash; unless two rows become identical once the other columns are dropped.</figcaption>
+      </figure>
+
+      <h3 class="sub">Other points about PROJECT</h3>
+      <p class="equation" style="font-size:1.1rem;">&pi;<sub>attributes</sub>(RELATION)</p>
+      <ul class="list">
+        <li>It selects <strong>attributes</strong> from a relation.</li>
+        <li>The resulting relation has a <mark>different schema</mark> than the operand.</li>
+        <li><strong>Duplicates are eliminated</strong> &mdash; the result is a relation, and relations have no repeated tuples.</li>
+        <li>If the attributes on which we project form a <strong>super key</strong>, then the result and operand have the <mark>same population.</mark></li>
+      </ul>
+      <p class="callout callout--warn">That last point is the useful test. Projecting onto a super key can never merge two rows, because a super key already distinguishes every tuple. Project onto anything less and rows may collapse.</p>
+    </section>
+
+    <!-- ============ 07 ROWS VS COLUMNS ============ -->
+    <section id="rowscols" class="section">
+      <p class="section__num">07</p>
+      <h2>Rows vs Columns</h2>
+      <p class="equation">The output of a <b>SELECT</b> operation: row(s)<br>The output of a <b>PROJECT</b> operation: column(s)</p>
+      <p>The two unary workhorses cut a table along different axes, and almost every query uses them together: select the rows you care about, then project the columns you want to see.</p>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">&sigma; &middot; horizontal cut</p>
+          <h3>SELECT keeps rows</h3>
+          <p>Same schema, same or fewer tuples. Nothing is ever deduplicated, because nothing was merged.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">&pi; &middot; vertical cut</p>
+          <h3>PROJECT keeps columns</h3>
+          <p>Different schema, same or fewer tuples. Duplicates that appear after dropping columns are removed.</p>
+        </article>
+      </div>
+      <p class="callout callout--note">Composed, they read inside out: <strong>&pi;<sub>Fname, SSN</sub>(&sigma;<sub>Sex = "M"</sub>(EMPLOYEE))</strong> is &ldquo;the first names and SSNs of the male employees.&rdquo;</p>
+    </section>
+
+    <!-- ============ 08 RENAME ============ -->
+    <section id="rename" class="section">
+      <p class="section__num">08</p>
+      <h2>RENAME &mdash; &rho;</h2>
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>The rename operation lets us <mark>rename a relation, its attributes, or both.</mark></p>
+      </div>
+      <p>For example, suppose we want to rename the EMPLOYEE relation WORKER and the Sex attribute Gender:</p>
+      <p class="equation">&rho;<sub>WORKER(FName, LName, Gender, SSN)</sub>(EMPLOYEE)</p>
+
+      <h3 class="sub">Renaming without the operator</h3>
+      <p>Assignment to a new name does the job on its own:</p>
+      <p class="equation" style="font-size:1rem;">NEWR &larr; R<br>R(FN, LN, SSN) &larr; &pi;<sub>Fname, Lname, SSN</sub>(EMPLOYEE)</p>
+
+      <h3 class="sub">Renaming with the operator</h3>
+      <p class="hint">Three forms, depending on what you want to relabel.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">&rho;<sub>S(B<sub>1</sub>, B<sub>2</sub>, &hellip;, B<sub>n</sub>)</sub>(R)</span>
+          <span class="card__sub">relation and attributes</span>
+          <span class="card__data">The relation becomes S and its attributes become B<sub>1</sub> through B<sub>n</sub>, in order. You must supply a new name for every attribute.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">&rho;<sub>S</sub>(R)</span>
+          <span class="card__sub">relation only</span>
+          <span class="card__data">The attribute names are left alone; only the relation is renamed to S.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">&rho;<sub>(B<sub>1</sub>, B<sub>2</sub>, &hellip;, B<sub>n</sub>)</sub>(R)</span>
+          <span class="card__sub">attributes only</span>
+          <span class="card__data">The relation keeps its name; the attributes are relabelled positionally.</span>
+        </button>
+      </div>
+      <p class="callout callout--note">Rename looks cosmetic, but it is what makes a relation joinable with itself, and what resolves the name clashes that cross product refuses to tolerate.</p>
+    </section>
+
+    <!-- ============ 09 SET OPERATIONS ============ -->
+    <section id="sets" class="section">
+      <p class="section__num">09</p>
+      <h2>Set Operations</h2>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Operator</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Symbol</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">Description</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;"><b>Union</b></td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">&cup;</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Combine results from two compatible relations</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;"><b>Intersection</b></td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">&cap;</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Return only common tuples</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;"><b>Difference</b></td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">&minus;</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">Return tuples in R but not in S</td>
+</tr>
+</tbody></table></div>
+      <h3 class="sub">Type compatibility</h3>
+      <p>These operators are binary and impose <mark>type compatibility</mark> between the two relations.</p>
+      <div class="definition">
+        <p class="definition__tag">Type compatible &middot; union compatible</p>
+        <p>Two relations <em>R<sub>1</sub>(A<sub>1</sub>, &hellip;, A<sub>n</sub>)</em> and <em>R<sub>2</sub>(B<sub>1</sub>, &hellip;, B<sub>m</sub>)</em> are type compatible when they have the <strong>same degree</strong> (m = n) and their attributes have the <strong>same domains.</strong></p>
+      </div>
+      <p class="equation">&forall;<sub>i</sub> &isin; {1..n}, &nbsp; Dom(A<sub>i</sub>) = Dom(B<sub>i</sub>)</p>
+
+      <h3 class="sub">The operators</h3>
+      <ul class="list">
+        <li><strong>R &cup; S</strong> &mdash; set of tuples in R <em>or</em> S. Duplicate tuples are eliminated.</li>
+        <li><strong>R &cap; S</strong> &mdash; set of tuples in <em>both</em> R <em>and</em> S.</li>
+        <li><strong>R &minus; S</strong> &mdash; set of tuples in R <em>but not</em> in S.</li>
+      </ul>
+      <p class="callout callout--warn">Note what type compatibility does <em>not</em> require: matching attribute <strong>names.</strong> It is degree and domains that must line up, position by position.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Same degree, same domains position by position &mdash; and difference is the one that is not symmetric."
+           data-no="Not quite. Type compatibility is about degree and domains, not attribute names, and R &minus; S is not the same as S &minus; R.">
+        <p class="activity__prompt">Which statements about the <strong>set operations</strong> are true?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">The two relations must have the same number of attributes</button>
+          <button class="chip" type="button" data-correct="true">Corresponding attributes must be drawn from the same domain</button>
+          <button class="chip" type="button">The two relations must use identical attribute names</button>
+          <button class="chip" type="button" data-correct="true">R &minus; S and S &minus; R can give different results</button>
+          <button class="chip" type="button">R &cup; S keeps duplicate tuples</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10 CROSS PRODUCT ============ -->
+    <section id="cross" class="section">
+      <p class="section__num">10</p>
+      <h2>CROSS PRODUCT &mdash; &times;</h2>
+      <p>This binary operator creates <strong>all tuple combinations</strong> from two relations. Every row of R is paired with every row of S, so a relation of 2 tuples crossed with one of 3 gives 6.</p>
+      <p class="callout callout--warn">It imposes that the two relations <strong>do not have attributes of the same name.</strong> To avoid this limitation we consider that all attribute names are prepended with the table name &mdash; here R&rsquo;s A attribute is <code>R.A</code>; if S had an A attribute it would be <code>S.A</code>.</p>
+      <figure class="figure">
+        <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R &times; S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div></div>
+        <figcaption>R &times; S. Two tuples times three tuples gives six, and the degree of the result is the sum of the two degrees.</figcaption>
+      </figure>
+      <p>On its own, cross product is rarely what you want &mdash; most of those combinations are meaningless. It becomes useful the moment a selection is applied on top of it, which is exactly what a join is.</p>
+    </section>
+
+    <!-- ============ 11 JOIN ============ -->
+    <section id="join" class="section">
+      <p class="section__num">11</p>
+      <h2>(INNER) JOIN &mdash; &#8904;</h2>
+      <p class="equation">R &#8904;<sub>condition</sub> S</p>
+      <ul class="list">
+        <li><strong>Equivalent to a CROSS PRODUCT followed by a SELECT.</strong></li>
+        <li>It links corresponding tuples from different relations.</li>
+      </ul>
+
+      <h3 class="sub">Three names for the same operator</h3>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">general condition</p>
+          <h3>Theta join</h3>
+          <p>The basic join. The condition can be any comparison at all &mdash; equality, inequality, less-than.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">equality only</p>
+          <h3>Equijoin</h3>
+          <p>Only checks for equality of attributes. A theta join whose condition happens to be an <code>=</code>.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">noted *</p>
+          <h3>Natural join</h3>
+          <p>An equijoin on attributes of the <strong>same name</strong> in both relations. The shared attribute appears once in the result, not twice.</p>
+        </article>
+      </div>
+
+      <h3 class="sub">Theta join example</h3>
+      <p>Here the condition is an inequality, A &ne; C:</p>
+      <figure class="figure">
+        <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R &#8904;<sub>A&ne;C</sub> S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div></div>
+        <figcaption>R &#8904;<sub>A&ne;C</sub> S. Of the six cross-product rows, the two where A equals C are dropped.</figcaption>
+      </figure>
+
+      <h3 class="sub">Natural join example</h3>
+      <p>Now S has an attribute named A too, so the join happens on A automatically:</p>
+      <figure class="figure">
+        <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R * S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+</tbody></table></div></div></div>
+        <figcaption>R * S. The shared attribute A appears once, and only rows agreeing on it survive.</figcaption>
+      </figure>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. A join is a cross product with a condition applied, and the natural join is the special case that matches on same-named attributes."
+           data-no="Not quite. Every join is a cross product followed by a selection; what varies is the condition and how the shared attribute is treated.">
+        <p class="activity__prompt">Which statements about <strong>joins</strong> are true?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">A join is equivalent to a cross product followed by a select</button>
+          <button class="chip" type="button" data-correct="true">An equijoin is a theta join whose condition uses only equality</button>
+          <button class="chip" type="button" data-correct="true">A natural join matches attributes that share a name in both relations</button>
+          <button class="chip" type="button">A theta join condition must always be an equality</button>
+          <button class="chip" type="button">A join always returns more tuples than the cross product</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12 DIVISION ============ -->
+    <section id="division" class="section">
+      <p class="section__num">12</p>
+      <h2>DIVISION &mdash; &divide;</h2>
+      <p class="equation">R(A<sub>1</sub>, &hellip;, A<sub>n</sub>, &hellip;, A<sub>m</sub>) &divide; S(A<sub>1</sub>, &hellip;, A<sub>n</sub>)</p>
+      <ul class="list">
+        <li>S&rsquo;s attributes must be a <strong>subset</strong> of R&rsquo;s.</li>
+        <li>The result relation has attributes A<sub>n+1</sub> to A<sub>m</sub> &mdash; the ones S does not cover.</li>
+      </ul>
+      <p class="equation" style="font-size:1rem;">R &divide; S = { &lang;a<sub>n+1</sub>, &hellip;, a<sub>m</sub>&rang; &nbsp;|&nbsp; &forall;&lang;a<sub>1</sub>, &hellip;, a<sub>n</sub>&rang; &isin; S, &lang;a<sub>1</sub>, &hellip;, a<sub>n</sub>, &hellip;, a<sub>m</sub>&rang; &isin; R }</p>
+      <div class="definition">
+        <p class="definition__tag">In words</p>
+        <p><mark>R &divide; S is the set of tuples that, when joined with every tuple in S, are in R.</mark></p>
+      </div>
+      <p>It answers &ldquo;for all&rdquo; questions &mdash; which students took <em>every</em> course in a list, which suppliers deliver <em>every</em> product a project needs.</p>
+
+      <h3 class="sub">Worked examples</h3>
+      <p>All three divisions below use the same relation R. Switch between the divisors to see how the answer changes.</p>
+      <figure class="figure"><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">0</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">0</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">0</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+</tbody></table></div><figcaption>The dividend, R(A, B, C). Division is on (B, C), so the result relation has attribute A.</figcaption></figure>
+      <div class="toggle" role="tablist" aria-label="Division examples">
+        <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="div-a">S = {(1,1), (2,0)}</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="div-b">S = {(1,1)}</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="div-c">S = {(3,5)}</button>
+      </div>
+      <div class="panel" id="div-a">
+        <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">0</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R &divide; S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+</tr>
+</tbody></table></div></div></div>
+        <p class="panel__use">A = 1 has both (1,1) and (2,0); so does A = 3. A = 2 has (1,1) but not (2,0), so it drops out.</p>
+      </div>
+      <div class="panel is-hidden" id="div-b">
+        <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R &divide; S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">1</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">2</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+</tr>
+</tbody></table></div></div></div>
+        <p class="panel__use">Only one pair to satisfy, and every value of A appears with (B,C) = (1,1). All three survive.</p>
+      </div>
+      <div class="panel is-hidden" id="div-c">
+        <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">3</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">5</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R &divide; S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">&mdash;</td>
+</tr>
+</tbody></table></div></div></div>
+        <p class="panel__use">No tuple in R has (B,C) = (3,5), so no value of A can satisfy the condition. The result is empty.</p>
+      </div>
+      <p class="callout callout--warn">Notice the direction of the effect: a <strong>bigger divisor is a harder test.</strong> Adding tuples to S can only shrink R &divide; S, never grow it.</p>
+    </section>
+
+    <!-- ============ 13 ADDITIONAL OPERATIONS ============ -->
+    <section id="extras" class="section">
+      <p class="section__num">13</p>
+      <h2>Additional Relational Operations</h2>
+
+      <h3 class="sub">Generalized projection &mdash; &pi;</h3>
+      <p>This operation extends the projection operator to allow us to <em>project on functions of the attributes.</em> For example, if we have a database of objects with their prices excluding tax, and we want all objects with their price including tax at ten per cent:</p>
+      <p class="equation">&pi;<sub>id, 1.1 &times; price</sub>(OBJECT)</p>
+      <p class="hint">The result column is computed, not stored &mdash; the underlying relation is untouched.</p>
+
+      <h3 class="sub">OUTER JOIN</h3>
+      <p>Same as a JOIN, but it keeps tuples which do not have a match in the other table, <strong>padding with NULL.</strong></p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">LEFT OUTER JOIN &nbsp;&#10197;</span>
+          <span class="card__sub">keeps tuples from the left relation</span>
+          <span class="card__data">Every tuple of R appears in the result. Where S has no match, S&rsquo;s attributes are filled with NULL.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">RIGHT OUTER JOIN &nbsp;&#10198;</span>
+          <span class="card__sub">keeps tuples from the right relation</span>
+          <span class="card__data">Every tuple of S appears in the result, with R&rsquo;s attributes padded with NULL where there is no match.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">FULL OUTER JOIN &nbsp;&#10199;</span>
+          <span class="card__sub">keeps tuples from both relations</span>
+          <span class="card__data">Unmatched tuples from either side are kept, each padded with NULL on the other side.</span>
+        </button>
+      </div>
+      <figure class="figure">
+        <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(13rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+</tbody></table></div></div><div><p style="font-family:var(--mono); font-size:.75rem; color:var(--maroon); margin:0 0 .4rem;">R &#10198;<sub>A=C</sub> S</p><div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">A</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">B</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">C</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">D</th>
+<th style="text-align:left; padding:.5rem .7rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); white-space:nowrap;">E</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">a</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">b</td>
+</tr>
+<tr>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--maroon-tint); color:var(--maroon-dk); font-weight:700;">NULL</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap; background:var(--maroon-tint); color:var(--maroon-dk); font-weight:700;">NULL</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">c</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">d</td>
+<td style="padding:.48rem .7rem; border-bottom:1px solid var(--rule-soft); font-family:var(--mono); font-size:.78rem; white-space:nowrap;">e</td>
+</tr>
+</tbody></table></div></div></div>
+        <figcaption>A right outer join on A = C. Rows (a,b) and (b,c) find their matches; S&rsquo;s tuple (c,d,e) has none, so A and B come back NULL.</figcaption>
+      </figure>
+
+      <h3 class="sub">OUTER UNION</h3>
+      <p>Extends union to relations that are <strong>not type compatible</strong> but that have <strong>some attributes in common.</strong> It is equivalent to a FULL OUTER JOIN on the common attributes.</p>
+      <p class="callout callout--note">Both outer operations exist for the same reason: an inner join silently discards the rows that failed to match, and sometimes those rows are the answer &mdash; the employee with no department, the product nobody ordered.</p>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li><strong>Relational algebra</strong> is a formal language for manipulating relations. Every operation takes relations and produces a new relation, which is what makes expressions composable.</li>
+        <li>It is the <strong>theoretical foundation of SQL</strong>, defines how retrieval works under the hood, enables query optimization, and lets you reason about correctness.</li>
+        <li><strong>Unary operators:</strong> Select (&sigma;), Project (&pi;), Rename (&rho;). <strong>Binary operators:</strong> Union (&cup;), Intersection (&cap;), Difference (&minus;), Product (&times;), Join (&#8904;).</li>
+        <li><strong>&sigma;</strong> returns rows: same schema, same or fewer tuples. <strong>&pi;</strong> returns columns: different schema, duplicates eliminated, same population only when projecting onto a super key.</li>
+        <li><strong>&rho;</strong> renames a relation, its attributes, or both &mdash; and assignment (NEWR &larr; R) renames without the operator.</li>
+        <li>&cup;, &cap;, and &minus; require <strong>type compatibility</strong>: same degree, and matching domains position by position.</li>
+        <li><strong>&times;</strong> pairs every tuple of R with every tuple of S, and requires that no attribute name is shared.</li>
+        <li>A <strong>join</strong> is a cross product followed by a select. Theta join takes any condition, equijoin only equality, and natural join (*) is an equijoin on same-named attributes.</li>
+        <li><strong>&divide;</strong> returns the tuples that, when joined with every tuple in S, are in R &mdash; the &ldquo;for all&rdquo; operator.</li>
+        <li><strong>Outer joins</strong> keep unmatched tuples and pad with NULL; <strong>outer union</strong> extends union to relations that merely share some attributes.</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="Topic3.html">&larr; Topic 3</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <span class="pager__spacer"></span>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Relational Algebra,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Static HTML, CSS, and JavaScript, built for embedding in Moodle.</p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "What does every relational algebra operation produce as its output?",
+    "options": ["A single scalar value", "A new relation", "A modified copy of the original table", "A list of tuple identifiers"],
+    "answer": 1,
+    "why": "Every operation produces a <strong>new relation.</strong> That closure property is what lets operators be chained, with the output of one becoming the operand of the next."
+  },
+  {
+    "stem": "&sigma;<sub>Sex = \"M\"</sub>(EMPLOYEE) is applied to a relation with 3 tuples and 4 attributes. What can you say about the result?",
+    "options": [
+      "It has 4 attributes and at most 3 tuples",
+      "It has at most 4 attributes and exactly 3 tuples",
+      "It has fewer than 4 attributes and fewer than 3 tuples",
+      "It has 4 attributes and exactly 3 tuples"
+    ],
+    "answer": 0,
+    "why": "Select never changes the schema, so all <strong>4 attributes</strong> remain. Its population is <strong>less than or equal to</strong> the operand's, so at most 3 tuples."
+  },
+  {
+    "stem": "Under what condition does &pi; return exactly as many tuples as its operand?",
+    "options": [
+      "When the operand has no duplicate values in any column",
+      "When the projected attributes form a super key",
+      "Always &mdash; project never changes the number of tuples",
+      "When only one attribute is projected"
+    ],
+    "answer": 1,
+    "why": "Project eliminates duplicates. If the attributes projected on form a <strong>super key</strong>, no two tuples can collapse into one, so the result and operand have the same population."
+  },
+  {
+    "stem": "Which pair of statements correctly describes the difference between SELECT and PROJECT?",
+    "options": [
+      "SELECT outputs columns; PROJECT outputs rows",
+      "SELECT outputs rows; PROJECT outputs columns",
+      "Both output rows, but PROJECT also sorts them",
+      "Both output columns, but SELECT also removes duplicates"
+    ],
+    "answer": 1,
+    "why": "The output of a <strong>SELECT</strong> operation is row(s); the output of a <strong>PROJECT</strong> operation is column(s)."
+  },
+  {
+    "stem": "You want to rename only the attributes of relation R, leaving its name alone. Which form do you use?",
+    "options": [
+      "&rho;<sub>S(B<sub>1</sub>, &hellip;, B<sub>n</sub>)</sub>(R)",
+      "&rho;<sub>S</sub>(R)",
+      "&rho;<sub>(B<sub>1</sub>, &hellip;, B<sub>n</sub>)</sub>(R)",
+      "NEWR &larr; R"
+    ],
+    "answer": 2,
+    "why": "Dropping the relation name from the subscript and giving only the attribute list &mdash; <strong>&rho;<sub>(B<sub>1</sub>, &hellip;, B<sub>n</sub>)</sub>(R)</strong> &mdash; renames the attributes only."
+  },
+  {
+    "stem": "R<sub>1</sub>(A, B, C) and R<sub>2</sub>(X, Y, Z) have matching domains position by position, but no attribute names in common. Can you compute R<sub>1</sub> &cup; R<sub>2</sub>?",
+    "options": [
+      "No &mdash; union requires identical attribute names",
+      "Yes &mdash; type compatibility needs only the same degree and the same domains",
+      "No &mdash; union requires the relations to have the same tuples",
+      "Only if you rename R<sub>2</sub>'s attributes first, which is mandatory"
+    ],
+    "answer": 1,
+    "why": "Two relations are <strong>type compatible</strong> when they have the same degree and Dom(A<sub>i</sub>) = Dom(B<sub>i</sub>) for every i. Attribute names are not part of the test."
+  },
+  {
+    "stem": "R has 2 tuples and 2 attributes; S has 3 tuples and 3 attributes. What are the degree and population of R &times; S?",
+    "options": ["Degree 3, 6 tuples", "Degree 5, 5 tuples", "Degree 5, 6 tuples", "Degree 6, 5 tuples"],
+    "answer": 2,
+    "why": "Cross product creates all tuple combinations: 2 &times; 3 = <strong>6 tuples</strong>, and the attributes of both relations are carried over: 2 + 3 = <strong>degree 5.</strong>"
+  },
+  {
+    "stem": "Which statement about joins is correct?",
+    "options": [
+      "A natural join is an equijoin on attributes of the same name in both relations",
+      "A theta join can only test equality",
+      "An equijoin keeps unmatched tuples and pads them with NULL",
+      "A join cannot be expressed using other relational algebra operators"
+    ],
+    "answer": 0,
+    "why": "The <strong>natural join</strong> (noted *) is an equijoin on attributes of the same name. A theta join takes any condition, padding with NULL is what <em>outer</em> joins do, and any join can be written as a cross product followed by a select."
+  },
+  {
+    "stem": "In R(A, B, C) &divide; S(B, C), which values of A appear in the result?",
+    "options": [
+      "Those that appear with at least one (B, C) pair from S",
+      "Those that appear with every (B, C) pair in S",
+      "Those that appear with no (B, C) pair in S",
+      "All values of A, since S's attributes are a subset of R's"
+    ],
+    "answer": 1,
+    "why": "R &divide; S is the set of tuples that, when joined with <strong>every</strong> tuple in S, are in R. Enlarging S makes the test harder, so the result can only shrink."
+  },
+  {
+    "stem": "What does an OUTER JOIN do that an inner JOIN does not?",
+    "options": [
+      "It removes duplicate tuples from the result",
+      "It requires the two relations to be type compatible",
+      "It keeps tuples with no match in the other relation, padding them with NULL",
+      "It joins on attributes of the same name automatically"
+    ],
+    "answer": 2,
+    "why": "An outer join is the same as a join but <strong>keeps tuples which do not have a match</strong> in the other table, padding the missing side with NULL. Left, right, and full decide which side's unmatched tuples are kept."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

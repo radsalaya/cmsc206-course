@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 2 (Part 1) &middot; Data Models &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic2-part1">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 2 &middot; Part 1</p>
+  <h1>Data Models</h1>
+  <p class="hero__lede">How to plan a database before you build it &mdash; the Entity-Relationship model, and the notation used to draw it.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>14</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic2 &middot; part 1</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#levels" class="rail__link"><span>02</span> Levels of a Data Model</a></li>
+      <li><a href="#ermodel" class="rail__link"><span>03</span> The ER Model</a></li>
+      <li><a href="#notation" class="rail__link"><span>04</span> ER Diagram Notation</a></li>
+      <li><a href="#definitions" class="rail__link"><span>05</span> Definitions</a></li>
+      <li><a href="#entities" class="rail__link"><span>06</span> Types of Entities</a></li>
+      <li><a href="#attributes" class="rail__link"><span>07</span> Types of Attributes</a></li>
+      <li><a href="#choosing" class="rail__link"><span>08</span> Choosing Attributes</a></li>
+      <li><a href="#keys" class="rail__link"><span>09</span> Types of Keys</a></li>
+      <li><a href="#relationship" class="rail__link"><span>10</span> Relationships</a></li>
+      <li><a href="#degree" class="rail__link"><span>11</span> Degree</a></li>
+      <li><a href="#cardinality" class="rail__link"><span>12</span> Cardinality</a></li>
+      <li><a href="#participation" class="rail__link"><span>13</span> Participation</a></li>
+      <li><a href="#drawing" class="rail__link"><span>14</span> Drawing an ERD</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 INTRODUCTION ============ -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>By the end of this lesson, you should be able to:</p>
+          <ul class="list">
+            <li>Identify and define <strong>entities, attributes, relationships,</strong> and <strong>keys</strong> in a given scenario;</li>
+            <li>Draw a basic <strong>Entity-Relationship Diagram (ERD)</strong> using standard notation;</li>
+            <li>Interpret ER diagrams and explain common <strong>cardinality</strong> and <strong>participation</strong> rules; and</li>
+            <li>Convert an ER diagram into a relational schema &mdash; <em>that last one is Part 2&rsquo;s job. This lesson gets you everything leading up to it.</em></li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Why we use data models</li>
+            <li>Entities, attributes, and keys</li>
+            <li>Relationships, degree, and cardinality</li>
+            <li>How to draw an ER diagram</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============ 02 LEVELS OF A DATA MODEL ============ -->
+    <section id="levels" class="section">
+      <p class="section__num">02</p>
+      <h2>Levels of a Data Model</h2>
+
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>A data model is a formal way to describe how data is <mark>organized</mark>, <mark>structured</mark>, and <mark>related</mark> within a system &mdash; a blueprint for how information is represented, connected, and managed in a database.</p>
+      </div>
+
+      <ul class="list">
+        <li>Sets the foundation for databases that are clear, consistent, and aligned with real-world needs.</li>
+        <li>Standardizes how data is stored and shared &mdash; promoting accuracy and reducing redundancy.</li>
+        <li>Data modeling answers three questions: what data do we store, how are pieces of data related, and what rules apply to that data?</li>
+      </ul>
+
+      <h3 class="sub">Three levels, hiding different concerns</h3>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">Where this lesson lives</p>
+          <h3>Conceptual</h3>
+          <p>Close to how people naturally perceive data. Focuses on what matters &mdash; the big picture of entities and relationships. Avoids implementation detail entirely. Example: the <strong>Entity-Relationship model.</strong></p>
+        </article>
+        <article class="type">
+          <h3>Logical</h3>
+          <p>Still understandable to people, but closer to how data sits in a computer &mdash; adds attributes, keys, and precise relationships. Still independent of any specific DBMS. Examples: Relational, Network, Hierarchical models.</p>
+        </article>
+        <article class="type">
+          <h3>Physical</h3>
+          <p>Specifies how data is actually stored and managed &mdash; file structures, indexing, data types, specific to a DBMS platform. Examples: SQL-specific tables, indexes, partitions.</p>
+        </article>
+      </div>
+      <p class="callout callout--note">The trickiest distinction is Logical vs. Physical &mdash; Logical already looks like storage, but it still hasn&rsquo;t committed to a DBMS.</p>
+    </section>
+
+    <!-- ============ 03 THE ER MODEL ============ -->
+    <section id="ermodel" class="section">
+      <p class="section__num">03</p>
+      <h2>The Entity-Relationship Model</h2>
+      <p>Developed by <strong>Peter Chen in 1976</strong> to provide a simple, understandable way to represent the structure and logic of a database &mdash; identifying which entities belong in it, and how those entities relate to one another.</p>
+
+      <p class="equation"><b>ER Model</b> = Entities + Relationships</p>
+
+      <ul class="list">
+        <li><strong>Entities</strong> &mdash; the real-world objects or concepts represented in the database.</li>
+        <li><strong>Relationships</strong> &mdash; the associations or interactions between entities.</li>
+      </ul>
+      <p class="hint">Attributes &mdash; the properties that describe an entity &mdash; are the third piece of the picture. Page 5 covers those.</p>
+      <p style="font-size:.85rem;color:var(--ink-faint);">Chen, Peter Pin-Shan. &ldquo;The entity-relationship model&mdash;toward a unified view of data.&rdquo; <em>ACM Transactions on Database Systems (TODS)</em> 1.1 (1976): 9&ndash;36.</p>
+    </section>
+
+    <!-- ============ 04 ER DIAGRAM NOTATION ============ -->
+    <section id="notation" class="section">
+      <p class="section__num">04</p>
+      <h2>ER Diagram Notation</h2>
+      <p>Before going further, here&rsquo;s the vocabulary of shapes used to actually draw an ER model &mdash; Chen&rsquo;s notation.</p>
+
+      <h3 class="sub">Try it first</h3>
+      <p class="hint">Tap a shape to see what it represents.</p>
+      <figure class="figure">
+        <div class="shapes" data-detail-target="#notationDetail">
+          <button class="shape-btn" type="button" data-detail="n-rect" aria-expanded="false"><span class="swatch"></span><span class="shape-name">?</span></button>
+          <button class="shape-btn" type="button" data-detail="n-ellipse" aria-expanded="false"><span class="swatch ellipse"></span><span class="shape-name">?</span></button>
+          <button class="shape-btn" type="button" data-detail="n-diamond" aria-expanded="false"><span class="swatch diamond"></span><span class="shape-name">?</span></button>
+          <button class="shape-btn" type="button" data-detail="n-line" aria-expanded="false"><span class="swatch line"></span><span class="shape-name">?</span></button>
+          <button class="shape-btn" type="button" data-detail="n-dblellipse" aria-expanded="false"><span class="swatch dbl-ellipse"></span><span class="shape-name">?</span></button>
+          <button class="shape-btn" type="button" data-detail="n-dblrect" aria-expanded="false"><span class="swatch dbl-rect"></span><span class="shape-name">?</span></button>
+        </div>
+        <div class="detail" id="notationDetail" role="status">
+          <p class="hint">Tap a shape above to reveal what it represents &mdash; then check it against the table below.</p>
+        </div>
+        <figcaption><strong>Figure 1:</strong> Chen&rsquo;s notation.</figcaption>
+      </figure>
+
+      <div hidden>
+        <div id="n-rect"><h4>Rectangle</h4><p>Represents <strong>entities</strong> in the ER model.</p></div>
+        <div id="n-ellipse"><h4>Ellipse</h4><p>Represents <strong>attributes</strong> in the ER model.</p></div>
+        <div id="n-diamond"><h4>Diamond</h4><p>Represents <strong>relationships</strong> among entities.</p></div>
+        <div id="n-line"><h4>Line</h4><p>Connects attributes to entities, and entity sets to relationship types.</p></div>
+        <div id="n-dblellipse"><h4>Double ellipse</h4><p>Represents a <strong>multi-valued</strong> attribute.</p></div>
+        <div id="n-dblrect"><h4>Double rectangle</h4><p>Represents a <strong>weak entity.</strong></p></div>
+      </div>
+
+      <h3 class="sub">For reference</h3>
+      <table style="width:100%; border-collapse:collapse; font-size:.92rem;">
+        <tr style="border-bottom:1px solid var(--rule);"><th style="text-align:left; padding:.5rem 0; font-family:var(--mono); font-size:.7rem; color:var(--ink-faint); text-transform:uppercase;">Figure</th><th style="text-align:left; padding:.5rem 0; font-family:var(--mono); font-size:.7rem; color:var(--ink-faint); text-transform:uppercase;">Represents</th></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Rectangle</td><td style="padding:.5rem 0;">Entities in the ER model</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Ellipse</td><td style="padding:.5rem 0;">Attributes in the ER model</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Diamond</td><td style="padding:.5rem 0;">Relationships among entities</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Line</td><td style="padding:.5rem 0;">Attributes to entities, entity sets to relationship types</td></tr>
+        <tr style="border-bottom:1px solid var(--rule-soft);"><td style="padding:.5rem 0;">Double ellipse</td><td style="padding:.5rem 0;">Multi-valued attributes</td></tr>
+        <tr><td style="padding:.5rem 0;">Double rectangle</td><td style="padding:.5rem 0;">Weak entity</td></tr>
+      </table>
+    </section>
+
+    <!-- ============ 05 DEFINITIONS ============ -->
+    <section id="definitions" class="section">
+      <p class="section__num">05</p>
+      <h2>Definitions</h2>
+
+      <div class="definition">
+        <p class="definition__tag">Entity</p>
+        <p>An object with a physical existence &mdash; a particular person, car, house, or employee &mdash; or a conceptual existence, like a company, a job, or a university course.</p>
+      </div>
+      <div class="definition">
+        <p class="definition__tag">Entity set</p>
+        <p>A collection or group of entities that share the same properties or attributes in a database or data model.</p>
+      </div>
+      <div class="definition">
+        <p class="definition__tag">Attributes</p>
+        <p>The properties that define the entity type &mdash; the data that needs to be stored for each entity. In a database table, attributes are the columns.</p>
+      </div>
+    </section>
+
+    <!-- ============ 06 TYPES OF ENTITIES ============ -->
+    <section id="entities" class="section">
+      <p class="section__num">06</p>
+      <h2>Types of Entities</h2>
+      <p class="hint">Tap a card to see a worked example.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Strong entity</span>
+          <span class="card__sub">independent &mdash; identified by its own attributes</span>
+          <span class="card__data"><em>example:</em> Student, with Student_NO as its own primary key. Student_NO alone uniquely identifies every student, so Student needs nothing else to exist.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Weak entity</span>
+          <span class="card__sub">depends on a strong entity &mdash; has only a partial key</span>
+          <span class="card__data"><em>example:</em> Enrollment, with Enrollment_no as a partial key. There can be no Enrollment without a Student &mdash; a record is only identified by Enrollment_no combined with Student_ID.</span>
+        </button>
+      </div>
+
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__box">Student</div>
+          <div class="relgram__pill">Has</div>
+          <div class="relgram__box relgram__box--weak">Enrollment</div>
+        </div>
+        <figcaption><strong>Figure 2:</strong> Strong entity &mdash; single rectangle. Weak entity &mdash; double rectangle.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ 07 TYPES OF ATTRIBUTES ============ -->
+    <section id="attributes" class="section">
+      <p class="section__num">07</p>
+      <h2>Types of Attributes</h2>
+      <p>Four types show up again and again. Tap a cell to read the full definition.</p>
+
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>K</b>ey attribute</span>
+          <span class="quad__short">uniquely identifies the entity</span>
+          <span class="quad__long">Uniquely identifies each entity in the entity set &mdash; shown <strong>underlined</strong> in the diagram. Example: Student_ID.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>C</b>omposite attribute</span>
+          <span class="quad__short">made up of several other attributes</span>
+          <span class="quad__long">Composed of many other attributes. Example: Address, which breaks down into Country, ZIP code, City/Province, and Street.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>M</b>ultivalued attribute</span>
+          <span class="quad__short">can hold more than one value</span>
+          <span class="quad__long">Consists of more than one value for a given entity &mdash; shown as a <strong>double ellipse.</strong> Example: Phone_no.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>D</b>erived attribute</span>
+          <span class="quad__short">computed from another attribute</span>
+          <span class="quad__long">Can be derived from other attributes &mdash; shown <strong>dashed.</strong> Example: Age, derived from Date_of_Birth.</span>
+        </button>
+      </div>
+
+      <h3 class="sub">Now find them on a real entity</h3>
+      <p class="hint">Tap each attribute of Student to see which type it is.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Student_ID</span>
+          <span class="card__sub">key attribute</span>
+          <span class="card__data"><em>why:</em> uniquely identifies each student &mdash; shown underlined.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Name</span>
+          <span class="card__sub">simple attribute</span>
+          <span class="card__data"><em>why:</em> atomic and single-valued &mdash; the baseline a plain ellipse represents.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Date_of_Birth</span>
+          <span class="card__sub">simple attribute</span>
+          <span class="card__data"><em>why:</em> also simple &mdash; and stored directly, which is exactly the source Age gets derived from below.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Phone_No</span>
+          <span class="card__sub">multivalued attribute</span>
+          <span class="card__data"><em>why:</em> a student can have more than one phone number &mdash; shown as a double ellipse.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Age</span>
+          <span class="card__sub">derived attribute</span>
+          <span class="card__data"><em>why:</em> computed from Date_of_Birth rather than stored on its own &mdash; shown dashed.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Address</span>
+          <span class="card__sub">composite attribute</span>
+          <span class="card__data"><em>why:</em> breaks down into Country, ZIP code, City/Province, and Street.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ 08 CHOOSING ATTRIBUTES ============ -->
+    <section id="choosing" class="section">
+      <p class="section__num">08</p>
+      <h2>Choosing Attributes of Entities</h2>
+      <p>An entity&rsquo;s attribute must:</p>
+      <ul class="list">
+        <li>Be directly linked to the entity.</li>
+        <li>Not be influenced by time &mdash; store <code>birthdate</code>, not <code>age</code>.</li>
+        <li>Not be influenced by other entities &mdash; <code>number of siblings</code> shouldn&rsquo;t be an attribute if it can be counted from the database instead.</li>
+        <li>Avoid data redundancy.</li>
+      </ul>
+      <p class="callout callout--note">If you can compute it from something else already in the database, don&rsquo;t store it separately.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct &mdash; both are influenced by time or by other data already in the database, and should be computed instead of stored."
+           data-no="Not quite. Years_of_Service and Number_of_Dependents are the two that violate the rules &mdash; both can be computed from data already on file.">
+        <p class="activity__prompt">Tap the attributes that should <strong>NOT</strong> be stored directly on an Employee entity.</p>
+        <div class="chips">
+          <button class="chip" type="button">Employee_ID</button>
+          <button class="chip" type="button">Hire_Date</button>
+          <button class="chip" type="button" data-correct="true">Years_of_Service</button>
+          <button class="chip" type="button">Last_Name</button>
+          <button class="chip" type="button" data-correct="true">Number_of_Dependents</button>
+          <button class="chip" type="button">Department_Name</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 09 TYPES OF KEYS ============ -->
+    <section id="keys" class="section">
+      <p class="section__num">09</p>
+      <h2>Types of Keys</h2>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Primary key</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A unique identifier for each record in a table. No two rows share it, and it can never be NULL. Example: in a Student table, Student_ID.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Candidate key</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Any attribute, or set of attributes, that <em>could</em> qualify as the primary key. There can be several &mdash; only one gets chosen. Example: Student_ID and Student_Email might both be unique; both are candidate keys, even though only one becomes primary.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Composite key</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Two or more attributes that together uniquely identify a record, used when no single attribute is enough. Example: in an Enrollment table, neither Student_ID nor Course_ID alone is unique &mdash; together, they are.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">Foreign key</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>An attribute in one table that links to the primary key of another, establishing the relationship between the two. Example: Enrollment.Student_ID references Student.Student_ID, so every enrollment corresponds to a real student.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10 RELATIONSHIPS ============ -->
+    <section id="relationship" class="section">
+      <p class="section__num">10</p>
+      <h2>Relationships</h2>
+      <div class="definition">
+        <p class="definition__tag">Definition</p>
+        <p>A <mark>relationship type</mark> represents the association between entity types. &ldquo;Enrolled in,&rdquo; for example, is a relationship type between the entity types Student and Course. In an ER diagram, it&rsquo;s drawn as a diamond connecting the two entities with lines.</p>
+      </div>
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__box">Student</div>
+          <div class="relgram__pill">Enrolled in</div>
+          <div class="relgram__box">Course</div>
+        </div>
+        <figcaption><strong>Figure 3:</strong> An entity relationship set.</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ 11 DEGREE ============ -->
+    <section id="degree" class="section">
+      <p class="section__num">11</p>
+      <h2>Degree of a Relationship Set</h2>
+      <p>How many entities participate in a single relationship.</p>
+      <div class="types">
+        <article class="type">
+          <h3>Unary</h3>
+          <p>Only one entity type participates.</p>
+          <div class="relgram" style="margin-top:.9rem; padding:1rem .8rem;">
+            <div class="relgram__box">Person</div>
+            <div class="relgram__pill">&#8635; Married to</div>
+          </div>
+        </article>
+        <article class="type">
+          <h3>Binary</h3>
+          <p>Two entity types participate.</p>
+          <div class="relgram" style="margin-top:.9rem; padding:1rem .8rem;">
+            <div class="relgram__box">Student</div>
+            <div class="relgram__pill">Enrolled in</div>
+            <div class="relgram__box">Course</div>
+          </div>
+        </article>
+        <article class="type">
+          <h3>Ternary</h3>
+          <p>Three entity types participate in a single relationship &mdash; for example, Student, Course, and Semester linked together.</p>
+        </article>
+        <article class="type">
+          <h3>N-ary</h3>
+          <p><em>n</em> entity types participate in a single relationship.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ============ 12 CARDINALITY ============ -->
+    <section id="cardinality" class="section">
+      <p class="section__num">12</p>
+      <h2>Cardinality</h2>
+      <p class="hint">The number of times an entity of an entity set participates in a relationship set.</p>
+
+      <div class="toggle" role="tablist" aria-label="Cardinality type">
+        <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="panelOneOne">1:1</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="panelOneMany">1:N</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="panelManyOne">N:1</button>
+      </div>
+
+      <div class="panel" id="panelOneOne" role="tabpanel">
+        <p class="panel__lede">Each entity in each set can take part <strong>only once</strong> in the relationship.</p>
+        <div class="relgram">
+          <div class="relgram__end"><div class="relgram__box">Surgeon</div><span class="relgram__num">1</span></div>
+          <div class="relgram__pill">Headed by</div>
+          <div class="relgram__end"><span class="relgram__num">1</span><div class="relgram__box">HOD</div></div>
+        </div>
+        <p class="panel__use">Example: a surgeon department is headed by one HOD, and that HOD heads one department.</p>
+      </div>
+      <div class="panel is-hidden" id="panelOneMany" role="tabpanel">
+        <p class="panel__lede">One entity relates to <strong>many</strong> on the other side.</p>
+        <div class="relgram">
+          <div class="relgram__end"><div class="relgram__box">Surgeon Dept.</div><span class="relgram__num">1</span></div>
+          <div class="relgram__pill">Has</div>
+          <div class="relgram__end"><span class="relgram__num">M</span><div class="relgram__box">Doctors</div></div>
+        </div>
+        <p class="panel__use">Example: one surgeon department can accommodate many doctors.</p>
+      </div>
+      <div class="panel is-hidden" id="panelManyOne" role="tabpanel">
+        <p class="panel__lede"><strong>Many</strong> entities relate to just one on the other side.</p>
+        <div class="relgram">
+          <div class="relgram__end"><div class="relgram__box">Multiple Surgeries</div><span class="relgram__num">M</span></div>
+          <div class="relgram__pill">Done by</div>
+          <div class="relgram__end"><span class="relgram__num">1</span><div class="relgram__box">Single Surgeon</div></div>
+        </div>
+        <p class="panel__use">Example: for one surgeon there can be many surgeries, but for one surgery there is only one surgeon.</p>
+      </div>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct &mdash; a passport and a car engine are both capped at exactly one on each side. The other two allow many on one side."
+           data-no="Not quite. Passport &harr; Citizen and Car &harr; Engine are the one-to-one pairs &mdash; both sides are capped at exactly one.">
+        <p class="activity__prompt">Tap the pairs that are <strong>one-to-one.</strong></p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">Passport &harr; Citizen</button>
+          <button class="chip" type="button">Department &harr; Employee</button>
+          <button class="chip" type="button" data-correct="true">Car &harr; Engine (by serial no.)</button>
+          <button class="chip" type="button">Course &harr; Enrolled Student</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 13 PARTICIPATION ============ -->
+    <section id="participation" class="section">
+      <p class="section__num">13</p>
+      <h2>Participation Constraint</h2>
+      <figure class="figure">
+        <div class="relgram">
+          <div class="relgram__col">
+            <div class="relgram__box">Student</div>
+            <span class="relgram__line relgram__line--total"></span>
+            <span class="relgram__num" style="border-radius:4px; width:auto;">m</span>
+          </div>
+          <div class="relgram__pill">Enrolled in</div>
+          <div class="relgram__col">
+            <span class="relgram__num" style="border-radius:4px; width:auto;">n</span>
+            <span class="relgram__line relgram__line--partial"></span>
+            <div class="relgram__box">Course</div>
+          </div>
+        </div>
+        <figcaption><strong>Figure 4:</strong> Total participation &mdash; double line. Partial participation &mdash; single line.</figcaption>
+      </figure>
+
+      <div class="definition">
+        <p class="definition__tag">Total participation</p>
+        <p>Every entity in the set <strong>must</strong> participate in the relationship. If every student must enroll in a course, Student&rsquo;s participation is total.</p>
+      </div>
+      <div class="definition">
+        <p class="definition__tag">Partial participation</p>
+        <p>An entity in the set <strong>may or may not</strong> participate. If some courses have no students enrolled yet, Course&rsquo;s participation in that same relationship is partial.</p>
+      </div>
+    </section>
+
+    <!-- ============ 14 DRAWING AN ERD ============ -->
+    <section id="drawing" class="section">
+      <p class="section__num">14</p>
+      <h2>How to Draw an ER Diagram</h2>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Identify all the entities</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Analyze the domain to find every distinct object or concept (e.g., Student, Course, Department). Represent each entity as a rectangle. Keep entity names clear, concise, and meaningful.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Identify the relationships</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Determine how entities interact (e.g., Student enrolls in Course). Represent each relationship as a diamond between the related entities, labeled with a verb phrase. Never connect a relationship directly to another relationship &mdash; only to entities.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Add attributes</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Represent attributes as ovals connected by straight lines. Underline key attributes. Mark multivalued, derived, and composite attributes with their proper notation.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">Assign cardinality &amp; participation</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Specify cardinality (1:1, 1:N, M:N) on each side of a relationship. Indicate total or partial participation with double or single lines.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">5</span><span class="acc__title">Review and refine</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Walk through the diagram against the original scenario. Check that every rule you were given is actually represented before moving on to a relational schema.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li>A <strong>data model</strong> is a blueprint for how information is organized, structured, and related.</li>
+        <li>Data models exist at three levels: <strong>conceptual</strong> (the ER model), <strong>logical</strong>, and <strong>physical.</strong></li>
+        <li>The <strong>ER model</strong> is built from <strong>entities</strong> and <strong>relationships,</strong> drawn with rectangles, ellipses, and diamonds.</li>
+        <li>Entities can be <strong>strong</strong> (self-sufficient) or <strong>weak</strong> (dependent, with a partial key).</li>
+        <li>Attributes can be <strong>key, composite, multivalued,</strong> or <strong>derived.</strong></li>
+        <li>Keys come in four flavors: <strong>primary, candidate, composite,</strong> and <strong>foreign.</strong></li>
+        <li>Relationships have a <strong>degree</strong> (unary, binary, ternary, n-ary), a <strong>cardinality</strong> (1:1, 1:N, N:1), and a <strong>participation constraint</strong> (total or partial).</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="topic1.html">&larr; Topic 1</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <a href="Topic2-Part2.html">Part 2 &rarr;</a>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Data Models &mdash; Part 1,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">The ER model: Chen (1976); Nguyen Kim Anh, <em>Data Modeling Using Entity-Relationship Model</em> (BCcampus, CC BY 3.0); GeeksforGeeks, <em>Introduction to ER Model.</em></p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "A model still uses concepts people can understand, adds attributes and keys, and looks close to how data is stored &mdash; but it hasn&rsquo;t committed to a specific DBMS or physical file layout. Which level is this?",
+    "options": ["Conceptual", "Logical", "Physical", "None of the above &mdash; every model is DBMS-specific"],
+    "answer": 1,
+    "why": "This is the trickiest distinction in the lesson. The <strong>logical</strong> model adds attributes and keys and resembles storage, but stays independent of any DBMS or physical layout &mdash; that independence is what separates it from the physical level."
+  },
+  {
+    "stem": "In Chen&rsquo;s notation, what does a diamond represent?",
+    "options": ["Entities", "Attributes", "Relationships", "Weak entities"],
+    "answer": 2,
+    "why": "The diamond connects entities to show how they associate with one another. Entities are rectangles, attributes are ellipses, and weak entities get a double rectangle."
+  },
+  {
+    "stem": "An &ldquo;Insurance_Claim&rdquo; entity can only exist if tied to a &ldquo;Policy&rdquo; entity, and is identified only by a partial key. Strong or weak entity?",
+    "options": ["Strong entity", "Weak entity", "Neither &mdash; this isn&rsquo;t a valid entity", "It depends on the DBMS"],
+    "answer": 1,
+    "why": "Dependent existence plus a partial key is exactly the definition of a <strong>weak entity</strong>, with Policy as its owner &mdash; the same shape as Enrollment depending on Student."
+  },
+  {
+    "stem": "&ldquo;Full_Name&rdquo; is broken down into First_Name, Middle_Name, and Last_Name. What kind of attribute is Full_Name?",
+    "options": ["Multivalued", "Composite", "Derived", "Key"],
+    "answer": 1,
+    "why": "<strong>Composite</strong> &mdash; made up of several other attributes, exactly like Address breaking down into Country, ZIP code, City/Province, and Street. Multivalued would mean several values of the <em>same</em> kind, like several phone numbers."
+  },
+  {
+    "stem": "In a Book table, both ISBN and Book_Code are independently unique for every row, but ISBN was chosen as the one the DBMS enforces. What is Book_Code now?",
+    "options": ["A foreign key", "No longer meaningful", "A candidate key", "A composite key"],
+    "answer": 2,
+    "why": "It still uniquely identifies each record &mdash; it just wasn&rsquo;t the one selected as primary. Every primary key started out as a <strong>candidate key</strong>; the others don&rsquo;t stop qualifying just because they weren&rsquo;t picked."
+  },
+  {
+    "stem": "In an Enrollment table linking Student and Course, why is a composite key needed instead of a single-column key?",
+    "options": [
+      "Because Enrollment is a weak entity and weak entities are not allowed primary keys",
+      "Because neither Student_ID nor Course_ID alone is unique in that table &mdash; only the combination is",
+      "Because composite keys are required by the SQL standard for all linking tables",
+      "Because Student_ID is a foreign key and foreign keys cannot also be part of a primary key"
+    ],
+    "answer": 1,
+    "why": "The same student appears in many rows (one per course) and the same course appears in many rows (one per enrolled student). Only <strong>Student_ID + Course_ID together</strong> is guaranteed unique per row."
+  },
+  {
+    "stem": "Which example is a unary relationship?",
+    "options": ["Student enrolled in Course", "Person married to Person", "Student, Course, and Semester linked together", "Employee assigned to Department"],
+    "answer": 1,
+    "why": "Only one entity type &mdash; Person &mdash; participates in <strong>&ldquo;Person married to Person,&rdquo;</strong> just referring to two different instances of it. That is what makes a relationship unary."
+  },
+  {
+    "stem": "One passport is issued to exactly one citizen, and one citizen holds exactly one passport. What is the cardinality?",
+    "options": ["One-to-many", "Many-to-one", "One-to-one", "Many-to-many"],
+    "answer": 2,
+    "why": "Each side is capped at exactly one &mdash; the definition of <strong>one-to-one</strong>, the same shape as Surgeon and HOD."
+  },
+  {
+    "stem": "At MAAP, every enrolled student must be assigned to at least one course, but some newly opened electives have zero students enrolled so far. What is Course&rsquo;s participation in &ldquo;Enrolled in&rdquo;?",
+    "options": ["Total", "Partial", "Neither &mdash; participation only applies to Student here", "Both, depending on the semester"],
+    "answer": 1,
+    "why": "Because some courses aren&rsquo;t enrolled by any student, Course&rsquo;s participation is <strong>partial</strong> &mdash; shown with a single line, versus the double line for Student&rsquo;s total participation."
+  },
+  {
+    "stem": "Which step comes right after identifying all the entities when drawing an ER diagram?",
+    "options": [
+      "Assign cardinality and participation constraints",
+      "Identify the relationships between entities",
+      "Add attributes to entities and relationships",
+      "Convert the diagram into a relational schema"
+    ],
+    "answer": 1,
+    "why": "The order is entities &rarr; <strong>relationships</strong> &rarr; attributes &rarr; cardinality/participation &rarr; review. Relationships come second because attributes and cardinality both describe things that connect entities that must already be identified."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

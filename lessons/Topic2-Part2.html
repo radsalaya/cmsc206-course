@@ -485,13 +485,48 @@ associated. For others, it will be NULL.</li>
       <h2>Case 3 &middot; Binary, n:1</h2>
       <p class="hint">Every student can enroll in only one elective course, but an elective course can have more than one student.</p>
       <figure class="figure">
-        <div class="relgram">
-          <div class="relgram__end"><div class="relgram__box">Student</div><span class="relgram__num">n</span></div>
-          <div class="relgram__pill">Enrolls</div>
-          <div class="relgram__end"><span class="relgram__num">1</span><div class="relgram__box">Elective Course</div></div>
-        </div>
-        <figcaption><strong>Figure 3:</strong> n:1 cardinality &mdash; many students, one elective course each.</figcaption>
-      </figure>
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 530 202"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+      <!-- attribute stems, drawn first so the filled shapes cover their ends -->
+      <line x1="80"  y1="42" x2="80"  y2="160" />
+      <line x1="440" y1="42" x2="440" y2="160" />
+
+      <!-- key attributes -->
+      <ellipse cx="80" cy="42" rx="44" ry="22" fill="var(--card)" />
+      <text class="erfrag__key" x="80" y="42" text-anchor="middle" dominant-baseline="central">S-id</text>
+
+      <ellipse cx="440" cy="42" rx="44" ry="22" fill="var(--card)" />
+      <text class="erfrag__key" x="440" y="42" text-anchor="middle" dominant-baseline="central">E-Id</text>
+
+      <!-- entity -->
+      <rect x="20" y="140" width="120" height="40" fill="var(--card)" />
+      <text x="80" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Student</text>
+
+      <!-- the many side -->
+      <line x1="140" y1="160" x2="200" y2="160" />
+      <text class="erfrag__n" x="170" y="148" text-anchor="middle">n</text>
+
+      <!-- relationship -->
+      <polygon points="260,128 320,160 260,192 200,160" fill="var(--card)" stroke-linejoin="round" />
+      <text x="260" y="160" text-anchor="middle" dominant-baseline="central">enrolls</text>
+
+      <!-- the one side -->
+      <line x1="320" y1="160" x2="370" y2="160" />
+      <text class="erfrag__n" x="345" y="148" text-anchor="middle">1</text>
+
+      <!-- entity -->
+      <rect x="370" y="140" width="140" height="40" fill="var(--card)" />
+      <text x="440" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Elective Course</text>
+    </svg>
+
+    <p class="erfrag__prose">In this scenario, every student can enroll only in one elective course, but for an elective course there can be more than one student.</p>
+  </div>
+  <figcaption>An n:1 relationship. Read the marker on a link as the number of instances on <em>that</em> side that pair with one instance on the other.</figcaption>
+</figure>
 
       <h3 class="sub">1. Convert each entity and relationship to tables</h3>
       <ul class="list">
@@ -514,13 +549,48 @@ associated. For others, it will be NULL.</li>
       <h2>Case 4 &middot; Binary, n:m</h2>
       <p class="hint">Every student can enroll in more than one compulsory course, and a compulsory course can have more than one student.</p>
       <figure class="figure">
-        <div class="relgram">
-          <div class="relgram__end"><div class="relgram__box">Student</div><span class="relgram__num">n</span></div>
-          <div class="relgram__pill">Enrolls</div>
-          <div class="relgram__end"><span class="relgram__num">m</span><div class="relgram__box">Compulsory Course</div></div>
-        </div>
-        <figcaption><strong>Figure 4:</strong> n:m cardinality &mdash; many-to-many.</figcaption>
-      </figure>
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 550 202"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+      <!-- attribute stems, drawn first so the filled shapes cover their ends -->
+      <line x1="80"  y1="42" x2="80"  y2="160" />
+      <line x1="450" y1="42" x2="450" y2="160" />
+
+      <!-- key attributes -->
+      <ellipse cx="80" cy="42" rx="44" ry="22" fill="var(--card)" />
+      <text class="erfrag__key" x="80" y="42" text-anchor="middle" dominant-baseline="central">S-id</text>
+
+      <ellipse cx="450" cy="42" rx="44" ry="22" fill="var(--card)" />
+      <text class="erfrag__key" x="450" y="42" text-anchor="middle" dominant-baseline="central">C-Id</text>
+
+      <!-- entity -->
+      <rect x="20" y="140" width="120" height="40" fill="var(--card)" />
+      <text x="80" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Student</text>
+
+      <!-- many on this side -->
+      <line x1="140" y1="160" x2="200" y2="160" />
+      <text class="erfrag__n" x="170" y="148" text-anchor="middle">n</text>
+
+      <!-- relationship -->
+      <polygon points="260,128 320,160 260,192 200,160" fill="var(--card)" stroke-linejoin="round" />
+      <text x="260" y="160" text-anchor="middle" dominant-baseline="central">enrolls</text>
+
+      <!-- many on this side too -->
+      <line x1="320" y1="160" x2="370" y2="160" />
+      <text class="erfrag__n" x="345" y="148" text-anchor="middle">m</text>
+
+      <!-- entity -->
+      <rect x="370" y="140" width="160" height="40" fill="var(--card)" />
+      <text x="450" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Compulsory Courses</text>
+    </svg>
+
+    <p class="erfrag__prose">Every student can enroll in more than 1 compulsory course, and for a compulsory course there can be more than 1 student.</p>
+  </div>
+  <figcaption>An m:n relationship &mdash; many on both sides. This is the one case that cannot be merged away when the diagram becomes tables; it needs a relationship table of its own.</figcaption>
+</figure>
 
       <h3 class="sub">1. Convert each entity and relationship to tables</h3>
       <ul class="list">
@@ -539,13 +609,52 @@ associated. For others, it will be NULL.</li>
       <h2>Case 5 &middot; Relationship with a Weak Entity</h2>
       <p class="hint">An Employee can have many Dependents (one-to-many). A Dependent depends on exactly one Employee for existence.</p>
       <figure class="figure">
-        <div class="relgram">
-          <div class="relgram__end"><div class="relgram__box">Employee</div><span class="relgram__num">1</span></div>
-          <div class="relgram__pill">Has</div>
-          <div class="relgram__end"><span class="relgram__num">n</span><div class="relgram__box relgram__box--weak">Dependants</div></div>
-        </div>
-        <figcaption><strong>Figure 5:</strong> Weak entity &mdash; double rectangle. Total participation from the Dependant&rsquo;s side.</figcaption>
-      </figure>
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 580 206"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+      <!-- attribute stems, drawn first so the filled shapes cover their ends -->
+      <line x1="80"  y1="42" x2="80"  y2="160" />
+      <line x1="480" y1="42" x2="480" y2="160" />
+
+      <!-- key attribute of the strong entity: solid underline -->
+      <ellipse cx="80" cy="42" rx="44" ry="22" fill="var(--card)" />
+      <text class="erfrag__key" x="80" y="42" text-anchor="middle" dominant-baseline="central">E-id</text>
+
+      <!-- partial key of the weak entity: dashed underline -->
+      <ellipse cx="480" cy="42" rx="54" ry="22" fill="var(--card)" />
+      <text x="480" y="42" text-anchor="middle" dominant-baseline="central">D-Name</text>
+      <line x1="446" y1="53" x2="514" y2="53" stroke-width="1.4" stroke-dasharray="4 3" />
+
+      <!-- strong entity -->
+      <rect x="20" y="140" width="120" height="40" fill="var(--card)" />
+      <text x="80" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Employee</text>
+
+      <!-- link -->
+      <line x1="140" y1="160" x2="200" y2="160" />
+      <text class="erfrag__n" x="170" y="148" text-anchor="middle">1</text>
+
+      <!-- identifying relationship: double diamond -->
+      <polygon points="270,124 340,160 270,196 200,160" fill="var(--card)" stroke-linejoin="round" />
+      <polygon points="270,135 329,160 270,185 211,160" stroke-linejoin="round" />
+      <text x="270" y="160" text-anchor="middle" dominant-baseline="central">has</text>
+
+      <!-- link -->
+      <line x1="340" y1="160" x2="400" y2="160" />
+      <text class="erfrag__n" x="370" y="148" text-anchor="middle">n</text>
+
+      <!-- weak entity: double rectangle -->
+      <rect x="400" y="138" width="160" height="44" fill="var(--card)" />
+      <rect x="406" y="144" width="148" height="32" />
+      <text x="480" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Dependants</text>
+    </svg>
+
+    <p class="erfrag__prose">A dependant is identified only through the employee it belongs to. D-Name alone does not distinguish one dependant from another &mdash; two employees may each have a child called Maria &mdash; so the key is D-Name together with E-id.</p>
+  </div>
+  <figcaption>The doubled shapes mark the dependence: a weak entity, and the identifying relationship that supplies the rest of its key.</figcaption>
+</figure>
 
       <p>The Dependent is a weak entity because it cannot be uniquely identified without its related Employee. The Dependent&rsquo;s key is a combination of the Employee&rsquo;s primary key (E-id) and a partial key of the Dependent (D-Name). The Dependent&rsquo;s participation in the relationship with Employee is total.</p>
 

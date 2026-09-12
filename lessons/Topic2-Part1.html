@@ -592,11 +592,32 @@
         <article class="type">
           <h3>Binary</h3>
           <p>Two entity types participate.</p>
-          <div class="relgram" style="margin-top:.9rem; padding:1rem .8rem;">
-            <div class="relgram__box">Student</div>
-            <div class="relgram__pill">Enrolled in</div>
-            <div class="relgram__box">Course</div>
-          </div>
+          <figure class="figure">
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 460 92"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <!-- entity -->
+      <rect x="6" y="26" width="110" height="40" />
+      <text x="61" y="46" text-anchor="middle" dominant-baseline="central">Student</text>
+
+      <!-- link -->
+      <line x1="116" y1="46" x2="156" y2="46" />
+
+      <!-- relationship -->
+      <polygon points="230,12 304,46 230,80 156,46" stroke-linejoin="round" />
+      <text x="230" y="46" text-anchor="middle" dominant-baseline="central">Enrolled in</text>
+
+      <!-- link -->
+      <line x1="304" y1="46" x2="344" y2="46" />
+
+      <!-- entity -->
+      <rect x="344" y="26" width="110" height="40" />
+      <text x="399" y="46" text-anchor="middle" dominant-baseline="central">Course</text>
+    </svg>
+  </div>
+  <figcaption>A binary relationship: two different entities joined by one diamond, with a line from each into it.</figcaption>
+</figure>
+
         </article>
         <article class="type">
           <h3>Ternary</h3>

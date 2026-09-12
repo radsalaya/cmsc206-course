@@ -302,6 +302,102 @@ inter-related relations (or tables).”</p>
         <li>The sequence of rows is insignificant.</li>
       </ul>
 
+      <h2>Key Terms</h2>
+      <ul class="list">
+        <li><strong>atomic value:</strong> each value in the domain
+is indivisible as far as the relational
+model is concerned</li>
+        <li><strong>attribute:</strong> principle storage unit in a
+database</li>
+        <li><strong>column:</strong> see attribute</li>
+        <li><strong>degree:</strong> number of attributes in a table</li>
+        <li><strong>domain:</strong> the original sets of atomic
+values used to model data; a set of
+acceptable values that a column is
+allowed to contain</li>
+        <li><strong>field:</strong> see attribute</li>
+        <li><strong>file:</strong> see relation</li>
+        <li><strong>record:</strong> contains fields that are
+related; see tuple</li>
+        <li><strong>relation:</strong> a subset of the Cartesian
+product of a list of domains
+characterized by a name; the technical
+term for table or file</li>
+        <li><strong>row:</strong> see tuple</li>
+        <li><strong>structured query language (SQL):</strong> the
+standard database access language</li>
+        <li><strong>table:</strong> see relation</li>
+        <li><strong>tuple:</strong> a technical term for row or record</li>
+      </ul>
+
+      <h2>Keys in the Relational Model</h2>
+      <ul class="list">
+        <li>A <strong>superkey</strong> is any set of attriutes {A<sub>i</sub>
+
+}<sub>i∈{0..n}</sub> of a relation where no
+two tuples can have the same set of values for these attributes.
+i.e. a superkey is any set of attributes that uniquely identifies
+tuples.</li>
+        <li>A <strong>candidate key</strong> is a minimal superkey, i.e. any superkey so that
+there is no smaller superkey.</li>
+        <li>The <strong>primary key</strong> of a relation is a particular candidate key used to
+identify tuples. The primary key is represented by underlining its
+attributes. <i>Every relation must have a primary key.</i></li>
+        <li><strong>Superkeys</strong>, candidate keys and primary keys are related to a single
+relation’s schema. A <strong>foreign key</strong> forms a constraint between two
+relations.<br/>
+Let R1 = {A<sub>1</sub>
+, A<sub>2</sub>
+, ..., A<sub>n</sub>
+
+} and R<sub>2</sub> = {B<sub>1</sub>
+, B<sub>2</sub>
+, ..., B<sub>m</sub>} be two relations. Let {A<sub>i</sub>} be
+
+the primary key for R<sub>1</sub>
+. {B<sub>i</sub>
+} is a foreign key that references R<sub>1</sub>
+iff:
+        <ul>
+          <li>{B<sub>i</sub>
+} and {A<sub>i</sub>
+
+} have the same domain</li>
+          <li>For every tuple t<sub>2</sub> of R<sub>2</sub>
+
+, the value of {B<sub>i</sub>
+
+} is NULL or occurs in a
+
+tuple t<sub>1</sub> of R<sub>1</sub></li>
+        </ul>
+        </li>
+        <li>A foreign key is represented by an arrow from the referencing attribute(s)
+to the referenced attribute(s).</li>
+        
+      </ul>
+
+<h2>Foreign Key Illustration</h2>
+      <code>Person(<u><span style="color:blue">PersonId</span></u>, FirstName, LastName)</code>
+      <code>Student(<u>StudentId</u>, <span style="color:blue">PersonId</span>)</code>
+      <p>A student is a person so it must have an existing PersonId. We
+create a foreign key in the <strong>Student</strong> relation that references the
+<strong>Person</strong> relation.</p>
+
+      <h2>Integrity Constraint</h2>
+      <p class="hint">A database schema is the sum of the relation schemas and of <strong>integrity
+constraints</strong> or the rules to make sure the database is in a coherent state.
+The different kinds of constraints are:</p>
+<ul>
+  <li><strong>entity integrity constraint</strong> – specifies that a primary key’s value cannot
+be NULL</li>
+  <li><strong>domain integrity constraint</strong> – specifies that an attribute’s value must
+respect its domain</li>
+  <li><strong>referential integrity constraint</strong> – enforces the foreign key mechanism</li>
+  <li><strong>other constraints</strong> – other constraints can be specified in the DB using
+mechanisms such as triggers or assertions.</li>
+</ul>
+      
       <h3 class="sub">Practice</h3>
       <div class="activity" data-activity="pick"
            data-ok="Correct &mdash; those three are the true properties. Duplicate rows and mixed-type entries are exactly what a valid table disallows."
@@ -326,7 +422,7 @@ inter-related relations (or tables).”</p>
     <section id="l2p" class="section">
       <p class="section__num">08</p>
       <h2>From Logical to Physical Model</h2>
-      <p>When designing a DB, we first draft a conceptual model &mdash; the ER model &mdash; before designing the physical model with the relational model. This process echoes the levels of abstraction from Part 1.</p>
+      <p><strong>From ER Model to Relational.</strong> ModelWhen designing a DB, we first draft a conceptual model &mdash; the ER model &mdash; before designing the physical model with the relational model. This process echoes the levels of abstraction from Part 1.</p>
       <ol class="list">
         <li>Design the conceptual model with the end user or stakeholders, who know what information they need but don&rsquo;t really care about how the DB is implemented.</li>
         <li>Make a logical relational model.</li>

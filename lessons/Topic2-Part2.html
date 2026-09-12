@@ -393,7 +393,7 @@ inter-related relations (or tables).”</p>
         <li><code>Has(Per-id, Pass-No)</code> &mdash; represents the relationship between Person and Passport, taking Per-Id from Person and Pass-No from Passport.</li>
       </ul>
     <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">NOTE: You can write tables like this.<br/>
-Table_name(attribute1, attribute2, ... attributeN)<br/>
+Table_name(<u>attribute1</u>, attribute2, ... attributeN)<br/>
 The underlined attribute is the primary key.</p>
       <h3 class="sub">2. Combine tables that can be combined</h3>
       <p>Since Person and Passport have a 1:1 cardinality with total participation of Passport, we can combine all three into one table.</p>
@@ -411,21 +411,48 @@ The underlined attribute is the primary key.</p>
       <h2>Case 2 &middot; Binary, 1:1, Partial on Both Sides</h2>
       <p class="hint">A male marries 0 or 1 female, and vice versa.</p>
       <figure class="figure">
-        <div class="relgram">
-          <div class="relgram__col">
-            <div class="relgram__box">Male</div>
-            <span class="relgram__line relgram__line--partial"></span>
-            <span class="relgram__num" style="border-radius:4px; width:auto;">1</span>
-          </div>
-          <div class="relgram__pill">Marry</div>
-          <div class="relgram__col">
-            <span class="relgram__num" style="border-radius:4px; width:auto;">1</span>
-            <span class="relgram__line relgram__line--partial"></span>
-            <div class="relgram__box">Female</div>
-          </div>
-        </div>
-        <figcaption><strong>Figure 2:</strong> 1:1 cardinality, partial participation on both sides (single line, both ends).</figcaption>
-      </figure>
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 520 202"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+      <!-- attribute stems, drawn first so the filled shapes cover their ends -->
+      <line x1="80"  y1="42" x2="80"  y2="160" />
+      <line x1="440" y1="42" x2="440" y2="160" />
+
+      <!-- key attributes -->
+      <ellipse cx="80" cy="42" rx="44" ry="22" fill="var(--card)" />
+      <text class="erfrag__key" x="80" y="42" text-anchor="middle" dominant-baseline="central">M-id</text>
+
+      <ellipse cx="440" cy="42" rx="44" ry="22" fill="var(--card)" />
+      <text class="erfrag__key" x="440" y="42" text-anchor="middle" dominant-baseline="central">F-Id</text>
+
+      <!-- entity -->
+      <rect x="20" y="140" width="120" height="40" fill="var(--card)" />
+      <text x="80" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Male</text>
+
+      <!-- single link: partial participation -->
+      <line x1="140" y1="160" x2="200" y2="160" />
+      <text class="erfrag__n" x="170" y="148" text-anchor="middle">1</text>
+
+      <!-- relationship -->
+      <polygon points="260,128 320,160 260,192 200,160" fill="var(--card)" stroke-linejoin="round" />
+      <text x="260" y="160" text-anchor="middle" dominant-baseline="central">Marry</text>
+
+      <!-- single link: partial participation here too -->
+      <line x1="320" y1="160" x2="380" y2="160" />
+      <text class="erfrag__n" x="350" y="148" text-anchor="middle">1</text>
+
+      <!-- entity -->
+      <rect x="380" y="140" width="120" height="40" fill="var(--card)" />
+      <text x="440" y="160" text-anchor="middle" dominant-baseline="central"
+            style="font-size:14px;">Female</text>
+    </svg>
+
+    <p class="erfrag__prose">A male marries 0 or 1 female and vice versa as well. So it is 1:1 cardinality, with a partial participation constraint from both.</p>
+  </div>
+  <figcaption>The same 1:1 cardinality as the passport example, but with single lines on both sides &mdash; nobody is obliged to marry.</figcaption>
+</figure>
 
       <h3 class="sub">1. Convert each entity and relationship to tables</h3>
       <ul class="list">
@@ -440,6 +467,15 @@ The underlined attribute is the primary key.</p>
         <li><code>Male(<u>M-id</u>, F-id)</code> &mdash; the M-id who are married will have an F-id associated. For others, it will be NULL.</li>
         <li><code>Female(<u>F-id</u>)</code></li>
       </ul>
+     <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">Some males and some females do not marry. If we merge
+3 tables into 1, for some M-Id, F-Id will be NULL. So there
+is no attribute which is always not NULL. So we can’t
+merge all three tables into 1. We can convert into 2 tables.
+     <ul>
+       <li>The Male table, M-Id who are married will have F-Id
+associated. For others, it will be NULL.</li>
+       <li>The Female table will have information of all females.</li>
+     </ul></p>
       <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">Note: we could just as easily have made Female the table carrying the male attribute if that fit the scenario better &mdash; the Female table would then have information on all females.</p>
     </section>
 

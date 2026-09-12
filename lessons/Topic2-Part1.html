@@ -677,21 +677,76 @@ one male. So the relationship will be one-to-one.</p>
         <p class="panel__use">Example: a surgeon department is headed by one HOD, and that HOD heads one department.</p>
       </div>
       <div class="panel is-hidden" id="panelOneMany" role="tabpanel">
-        <p class="panel__lede">One entity relates to <strong>many</strong> on the other side.</p>
-        <div class="relgram">
-          <div class="relgram__end"><div class="relgram__box">Surgeon Dept.</div><span class="relgram__num">1</span></div>
-          <div class="relgram__pill">Has</div>
-          <div class="relgram__end"><span class="relgram__num">M</span><div class="relgram__box">Doctors</div></div>
-        </div>
+        <p class="panel__lede"><strong>One-to-Many:</strong> In one-to-many mapping as well where each entity
+can be related to more than one entity and the total number of
+tables that can be used in this is 2. Let us assume that one surgeon
+department can accommodate many doctors. So the Cardinality
+will be 1 to M. It means one department has many Doctors.</p>
+        <figure class="figure">
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 470 92"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <!-- entity, label on two lines -->
+      <rect x="6" y="24" width="150" height="44" />
+      <text x="81" y="38" text-anchor="middle" dominant-baseline="central">Surgeon</text>
+      <text x="81" y="55" text-anchor="middle" dominant-baseline="central">Department</text>
+
+      <!-- link, with its cardinality -->
+      <line x1="156" y1="46" x2="186" y2="46" />
+      <text class="erfrag__n" x="171" y="33" text-anchor="middle">1</text>
+
+      <!-- relationship -->
+      <polygon points="256,10 326,46 256,82 186,46" stroke-linejoin="round" />
+      <text x="256" y="46" text-anchor="middle" dominant-baseline="central">Has</text>
+
+      <!-- link, with its cardinality -->
+      <line x1="326" y1="46" x2="366" y2="46" />
+      <text class="erfrag__n" x="346" y="33" text-anchor="middle">M</text>
+
+      <!-- entity -->
+      <rect x="366" y="24" width="98" height="44" />
+      <text x="415" y="46" text-anchor="middle" dominant-baseline="central">Doctors</text>
+    </svg>
+  </div>
+  <figcaption>A one-to-many relationship: each surgeon department has many doctors, but each doctor belongs to exactly one department.</figcaption>
+</figure>
         <p class="panel__use">Example: one surgeon department can accommodate many doctors.</p>
       </div>
       <div class="panel is-hidden" id="panelManyOne" role="tabpanel">
-        <p class="panel__lede"><strong>Many</strong> entities relate to just one on the other side.</p>
-        <div class="relgram">
-          <div class="relgram__end"><div class="relgram__box">Multiple Surgeries</div><span class="relgram__num">M</span></div>
-          <div class="relgram__pill">Done by</div>
-          <div class="relgram__end"><span class="relgram__num">1</span><div class="relgram__box">Single Surgeon</div></div>
-        </div>
+        <p class="panel__lede"><strong>Many-to-one:</strong> When entities in one entity set can take part only
+once in the relationship set and entities in other entity sets can take
+part more than once in the relationship set, cardinality is many to
+one. Let us assume that a student can take only one course but one
+course can be taken by many students. So the cardinality will be n
+to 1. It means that for one course there can be n students but for
+one student, there will be only one course.</p>
+        <figure class="figure">
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 530 92"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <!-- entity -->
+      <rect x="6" y="26" width="170" height="40" />
+      <text x="91" y="46" text-anchor="middle" dominant-baseline="central">Multiple surgeries</text>
+
+      <!-- link, with its cardinality -->
+      <line x1="176" y1="46" x2="216" y2="46" />
+      <text class="erfrag__n" x="196" y="33" text-anchor="middle">M</text>
+
+      <!-- relationship -->
+      <polygon points="286,10 356,46 286,82 216,46" stroke-linejoin="round" />
+      <text x="286" y="46" text-anchor="middle" dominant-baseline="central">done by</text>
+
+      <!-- link, with its cardinality -->
+      <line x1="356" y1="46" x2="396" y2="46" />
+      <text class="erfrag__n" x="376" y="33" text-anchor="middle">1</text>
+
+      <!-- entity -->
+      <rect x="396" y="26" width="128" height="40" />
+      <text x="460" y="46" text-anchor="middle" dominant-baseline="central">single surgeon</text>
+    </svg>
+  </div>
+  <figcaption>A many-to-one relationship: many surgeries are done by one surgeon, read from the many side first.</figcaption>
+</figure>
         <p class="panel__use">Example: for one surgeon there can be many surgeries, but for one surgery there is only one surgeon.</p>
       </div>
 

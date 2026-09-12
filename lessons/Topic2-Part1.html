@@ -12,60 +12,68 @@
 /* ER Model map — self-contained, uses the shared design tokens */
 .ermap{
   background:var(--card); border:1px solid var(--rule); border-radius:var(--r);
-  padding:1.6rem 1.1rem 1.4rem; text-align:center;
+  padding:1.7rem 1.2rem 1.5rem;
+  display:flex; flex-direction:column; align-items:center;
 }
 .ermap__root{
-  display:inline-block; margin:0; background:var(--ink); color:#fff;
-  font-family:var(--display); font-weight:700; font-size:.95rem;
-  padding:.5rem 1.5rem; border-radius:var(--r);
+  margin:0; background:var(--ink); color:#fff;
+  font-family:var(--display); font-weight:700; font-size:.95rem; line-height:1.3;
+  padding:.55rem 1.5rem; border-radius:var(--r);
 }
-.ermap__stem{ width:1px; height:1.15rem; background:var(--ink-faint); margin:0 auto; }
+.ermap__stem{ width:1px; height:1.2rem; background:var(--ink-faint); }
 
 .ermap__branches{
-  position:relative; display:grid; grid-template-columns:repeat(3,1fr);
-  gap:1.2rem; padding-top:1.9rem;
+  position:relative; align-self:stretch;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:1rem;
 }
-.ermap__branches::before{            /* the horizontal bar */
+.ermap__branches::before{                 /* horizontal bar joining the three drops */
   content:""; position:absolute; top:0; left:16.666%; right:16.666%;
   height:1px; background:var(--ink-faint);
 }
-.ermap__col{ position:relative; }
-.ermap__col::before{                 /* drop from the bar into each node */
-  content:""; position:absolute; top:0; left:50%; width:1px; height:1.35rem;
-  background:var(--ink-faint);
+.ermap__col{
+  position:relative; padding-top:2rem;
+  display:flex; flex-direction:column; align-items:center;
 }
-.ermap__col::after{                  /* arrowhead on the drop */
-  content:""; position:absolute; top:1.3rem; left:50%; transform:translateX(-50%);
+.ermap__col::before{                       /* drop from the bar down to the node */
+  content:""; position:absolute; top:0; left:calc(50% - .5px);
+  width:1px; height:1.4rem; background:var(--ink-faint);
+}
+.ermap__col::after{                        /* arrowhead at the end of the drop */
+  content:""; position:absolute; top:1.35rem; left:50%; transform:translateX(-50%);
+  width:0; height:0;
   border-left:3.5px solid transparent; border-right:3.5px solid transparent;
   border-top:5px solid var(--ink-faint);
 }
 .ermap__node{
-  display:inline-block; margin:0; background:var(--paper); border:1px solid var(--rule);
-  border-radius:var(--r); padding:.45rem 1rem;
-  font-family:var(--display); font-weight:600; font-size:.92rem;
+  margin:0; background:var(--paper); border:1px solid var(--rule); border-radius:var(--r);
+  padding:.45rem 1.05rem;
+  font-family:var(--display); font-weight:600; font-size:.92rem; line-height:1.3;
+  white-space:nowrap;
 }
 
 .ermap__leaves{
-  list-style:none; display:inline-block; text-align:left;
-  margin:.85rem 0 0; padding:0;
+  list-style:none; margin:.9rem 0 0; padding:0; text-align:left;
 }
 .ermap__leaves li{
-  position:relative; padding:0 0 .4rem 1.35rem;
-  font-size:.88rem; line-height:1.5; color:var(--ink-soft);
+  position:relative; padding:0 0 .45rem 1.3rem;
+  font-size:.88rem; line-height:1.5; color:var(--ink-soft); white-space:nowrap;
 }
-.ermap__leaves li::before{           /* the vertical spine */
+.ermap__leaves li:last-child{ padding-bottom:0; }
+.ermap__leaves li::before{                 /* vertical spine down the left */
   content:""; position:absolute; left:0; top:0; bottom:0;
   width:1px; background:var(--rule);
 }
 .ermap__leaves li:last-child::before{ bottom:auto; height:.75em; }
-.ermap__leaves li::after{            /* the branch arrow */
-  content:"\2192"; position:absolute; left:.2rem; top:0;
-  color:var(--maroon); font-family:var(--mono); font-size:.8em; line-height:1.85;
+.ermap__leaves li::after{                  /* arrow pointing into the label */
+  content:"\2192"; position:absolute; left:.1rem; top:0;
+  height:1.5em; display:flex; align-items:center;
+  color:var(--maroon); font-family:var(--mono); font-size:.72rem;
 }
 
 @media (max-width:620px){
-  .ermap__branches{ grid-template-columns:1fr; gap:1.6rem; padding-top:1.5rem; }
+  .ermap__branches{ grid-template-columns:1fr; gap:.4rem; }
   .ermap__branches::before{ display:none; }
+  .ermap__col{ padding-top:1.5rem; }
   .ermap__col::before{ height:1rem; }
   .ermap__col::after{ top:.95rem; }
 }

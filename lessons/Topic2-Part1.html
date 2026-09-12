@@ -8,6 +8,69 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../assets/style.css">
+<style>
+/* ER Model map — self-contained, uses the shared design tokens */
+.ermap{
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--r);
+  padding:1.6rem 1.1rem 1.4rem; text-align:center;
+}
+.ermap__root{
+  display:inline-block; margin:0; background:var(--ink); color:#fff;
+  font-family:var(--display); font-weight:700; font-size:.95rem;
+  padding:.5rem 1.5rem; border-radius:var(--r);
+}
+.ermap__stem{ width:1px; height:1.15rem; background:var(--ink-faint); margin:0 auto; }
+
+.ermap__branches{
+  position:relative; display:grid; grid-template-columns:repeat(3,1fr);
+  gap:1.2rem; padding-top:1.9rem;
+}
+.ermap__branches::before{            /* the horizontal bar */
+  content:""; position:absolute; top:0; left:16.666%; right:16.666%;
+  height:1px; background:var(--ink-faint);
+}
+.ermap__col{ position:relative; }
+.ermap__col::before{                 /* drop from the bar into each node */
+  content:""; position:absolute; top:0; left:50%; width:1px; height:1.35rem;
+  background:var(--ink-faint);
+}
+.ermap__col::after{                  /* arrowhead on the drop */
+  content:""; position:absolute; top:1.3rem; left:50%; transform:translateX(-50%);
+  border-left:3.5px solid transparent; border-right:3.5px solid transparent;
+  border-top:5px solid var(--ink-faint);
+}
+.ermap__node{
+  display:inline-block; margin:0; background:var(--paper); border:1px solid var(--rule);
+  border-radius:var(--r); padding:.45rem 1rem;
+  font-family:var(--display); font-weight:600; font-size:.92rem;
+}
+
+.ermap__leaves{
+  list-style:none; display:inline-block; text-align:left;
+  margin:.85rem 0 0; padding:0;
+}
+.ermap__leaves li{
+  position:relative; padding:0 0 .4rem 1.35rem;
+  font-size:.88rem; line-height:1.5; color:var(--ink-soft);
+}
+.ermap__leaves li::before{           /* the vertical spine */
+  content:""; position:absolute; left:0; top:0; bottom:0;
+  width:1px; background:var(--rule);
+}
+.ermap__leaves li:last-child::before{ bottom:auto; height:.75em; }
+.ermap__leaves li::after{            /* the branch arrow */
+  content:"\2192"; position:absolute; left:.2rem; top:0;
+  color:var(--maroon); font-family:var(--mono); font-size:.8em; line-height:1.85;
+}
+
+@media (max-width:620px){
+  .ermap__branches{ grid-template-columns:1fr; gap:1.6rem; padding-top:1.5rem; }
+  .ermap__branches::before{ display:none; }
+  .ermap__col::before{ height:1rem; }
+  .ermap__col::after{ top:.95rem; }
+}
+</style>
+
 </head>
 <body data-lesson="topic2-part1">
 
@@ -160,6 +223,43 @@
     <section id="notation" class="section">
       <p class="section__num">04</p>
       <h2>ER Diagram Notation</h2>
+      <figure class="figure">
+  <div class="ermap">
+    <p class="ermap__root">ER Model</p>
+    <div class="ermap__stem"></div>
+
+    <div class="ermap__branches">
+      <div class="ermap__col">
+        <p class="ermap__node">Entity</p>
+        <ul class="ermap__leaves">
+          <li>Strong Entity</li>
+          <li>Weak Entity</li>
+        </ul>
+      </div>
+
+      <div class="ermap__col">
+        <p class="ermap__node">Attribute</p>
+        <ul class="ermap__leaves">
+          <li>Key Attribute</li>
+          <li>Composite Attribute</li>
+          <li>Multivalued Attribute</li>
+          <li>Derived Attribute</li>
+        </ul>
+      </div>
+
+      <div class="ermap__col">
+        <p class="ermap__node">Relationship</p>
+        <ul class="ermap__leaves">
+          <li>One to One</li>
+          <li>One to Many</li>
+          <li>Many to One</li>
+          <li>Many to Many</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <figcaption>The three building blocks of the ER model, and the kinds each one comes in.</figcaption>
+</figure>
       <p>Before going further, here&rsquo;s the vocabulary of shapes used to actually draw an ER model &mdash; Chen&rsquo;s notation.</p>
 
       <h3 class="sub">Try it first</h3>

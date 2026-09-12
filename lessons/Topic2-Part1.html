@@ -103,6 +103,20 @@
 @media (max-width:520px){
   .ernote__row{ grid-template-columns:5.5rem 1fr; gap:0 .9rem; padding:.75rem .9rem; }
 }
+
+  /* Small ER fragment — self-contained, uses the shared design tokens */
+.erfrag{
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--r);
+  padding:1.5rem 1.2rem; text-align:center;
+}
+.erfrag__art{
+  display:block; width:100%; max-width:26rem; height:auto; margin:0 auto;
+  color:var(--ink);                       /* shapes inherit this via currentColor */
+}
+.erfrag__art text{
+  font-family:var(--display); font-weight:600; font-size:15px;
+  fill:currentColor; stroke:none;
+}
   
 </style>
 
@@ -555,10 +569,25 @@
         <article class="type">
           <h3>Unary</h3>
           <p>Only one entity type participates.</p>
-          <div class="relgram" style="margin-top:.9rem; padding:1rem .8rem;">
-            <div class="relgram__box">Person</div>
-            <div class="relgram__pill">&#8635; Married to</div>
-          </div>
+          <figure class="figure">
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 350 92"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <!-- entity -->
+      <rect x="12" y="26" width="132" height="40" />
+      <text x="78" y="46" text-anchor="middle" dominant-baseline="central">Person</text>
+
+      <!-- two links: the same entity takes part twice -->
+      <line x1="144" y1="34" x2="206" y2="46" />
+      <line x1="144" y1="58" x2="206" y2="46" />
+
+      <!-- relationship -->
+      <polygon points="272,12 338,46 272,80 206,46" stroke-linejoin="round" />
+      <text x="272" y="46" text-anchor="middle" dominant-baseline="central">Married to</text>
+    </svg>
+  </div>
+
+</figure>
         </article>
         <article class="type">
           <h3>Binary</h3>

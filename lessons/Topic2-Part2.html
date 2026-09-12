@@ -392,9 +392,15 @@ inter-related relations (or tables).”</p>
         <li><code>Passport(<u>Pass-No</u>)</code> &mdash; corresponds to the Passport entity, with key Pass-No.</li>
         <li><code>Has(Per-id, Pass-No)</code> &mdash; represents the relationship between Person and Passport, taking Per-Id from Person and Pass-No from Passport.</li>
       </ul>
-
+    <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">NOTE: You can write tables like this.<br/>
+Table_name(attribute1, attribute2, ... attributeN)<br/>
+The underlined attribute is the primary key.</p>
       <h3 class="sub">2. Combine tables that can be combined</h3>
       <p>Since Person and Passport have a 1:1 cardinality with total participation of Passport, we can combine all three into one table.</p>
+      <p><code>Person(<u>Per-id</u>)</code></p>
+      <p><code>Passport(<u>Pass-No</u>)</code></p>
+      <p><code>Has(Per-id, Pass-No)</code></p>
+      <p><i>will now be...</i></p>
       <p><code>Person(<u>Per-id</u>, Pass-No)</code></p>
       <p style="font-size:.88rem; font-style:italic; color:var(--maroon-dk);">Each Per-Id will be unique and not null, so it becomes the key. Pass-No can&rsquo;t be the key, because for some people it can be NULL.</p>
     </section>

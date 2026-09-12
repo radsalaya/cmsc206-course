@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 6 &middot; Triggers &amp; Stored Routines &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic6">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 6</p>
+  <h1>Triggers &amp;<br>Stored Routines</h1>
+  <p class="hero__lede">Business logic does not have to live in the application. Moving some of it into the database buys efficiency, consistency, and security &mdash; at the cost of portability, and only if you keep it simple.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>11</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic6</p>
+    <ol class="rail__list">
+      <li><a href="#why" class="rail__link"><span>01</span> Why Logic in the Database</a></li>
+      <li><a href="#triggers" class="rail__link"><span>02</span> Triggers</a></li>
+      <li><a href="#syntax" class="rail__link"><span>03</span> Trigger Syntax</a></li>
+      <li><a href="#stock" class="rail__link"><span>04</span> Example: Reducing Stock</a></li>
+      <li><a href="#when" class="rail__link"><span>05</span> When to Use Triggers</a></li>
+      <li><a href="#functions" class="rail__link"><span>06</span> Functions &amp; Stored Routines</a></li>
+      <li><a href="#funcproc" class="rail__link"><span>07</span> Function vs Procedure</a></li>
+      <li><a href="#languages" class="rail__link"><span>08</span> Procedural Languages</a></li>
+      <li><a href="#practices" class="rail__link"><span>09</span> Good Practices</a></li>
+      <li><a href="#activity" class="rail__link"><span>10</span> Practice Activity</a></li>
+      <li><a href="#reflection" class="rail__link"><span>11</span> Reflection Questions</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 WHY LOGIC IN THE DATABASE ============ -->
+    <section id="why" class="section">
+      <p class="section__num">01</p>
+      <h2>Why Build Logic into the Database?</h2>
+      <div class="split">
+        <div>
+          <p>Traditionally, application programs contain all the business logic. The database stores rows; the code decides what those rows are allowed to be. Moving <em>some</em> of that logic into the database offers several benefits.</p>
+          <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Advantage</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Description</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Efficiency</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Operations run closer to the data, reducing network overhead.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Consistency</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Rules are enforced the same way for all applications.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Security</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Sensitive operations can stay within the DBMS.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Reusability</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The same logic can be reused across projects and users.</td>
+</tr>
+</tbody></table></div>
+          <p class="callout callout--warn"><strong>Note:</strong> Database-side logic can <strong>reduce portability</strong> between different DBMSs, since the syntax varies from one system to the next.</p>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Trigger = when &ndash; if &ndash; then</li>
+            <li>BEFORE / AFTER / INSTEAD OF</li>
+            <li>NEW and OLD row references</li>
+            <li>Function returns; procedure acts</li>
+            <li>SQLite: triggers yes, stored routines no</li>
+          </ul>
+        </aside>
+      </div>
+      <p>That trade-off is the shape of the whole topic. Every advantage below comes from the logic being closer to the data; the one drawback comes from it being written in a dialect only that DBMS understands.</p>
+    </section>
+
+    <!-- ============ 02 TRIGGERS ============ -->
+    <section id="triggers" class="section">
+      <p class="section__num">02</p>
+      <h2>Triggers</h2>
+      <div class="definition">
+        <p class="definition__tag">Trigger</p>
+        <p>A <mark>trigger</mark> is a stored SQL program that runs <strong>automatically</strong> when a specified event occurs in the database.</p>
+      </div>
+      <p>It is essentially a <em>when&ndash;if&ndash;then</em> rule. Tap each part to see what it covers.</p>
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>When</b></span>
+          <span class="quad__short">an event happens</span>
+          <span class="quad__long">An INSERT, UPDATE, or DELETE on a particular table. The event is what wakes the trigger up &mdash; nothing calls it, and no application can choose to skip it.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>If</b></span>
+          <span class="quad__short">a condition is met</span>
+          <span class="quad__long">An optional WHEN clause. If it evaluates false for a given row, the trigger body is skipped for that row and the original statement carries on unaffected.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Then</b></span>
+          <span class="quad__short">perform an action</span>
+          <span class="quad__long">The body: one or more SQL statements, such as updating another table, writing an audit row, or raising an error to abort the operation.</span>
+        </button>
+      </div>
+      <p class="callout callout--note">Triggers embed <strong>monitoring and enforcement logic</strong> directly inside the database. Because nothing invokes them explicitly, they hold no matter which application &mdash; or which careless script &mdash; touches the data.</p>
+    </section>
+
+    <!-- ============ 03 TRIGGER SYNTAX ============ -->
+    <section id="syntax" class="section">
+      <p class="section__num">03</p>
+      <h2>Trigger Syntax</h2>
+      <p>The general form in SQLite:</p>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">sqlite</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">CREATE TRIGGER trigger_name
+{ BEFORE | AFTER | INSTEAD OF } { INSERT | UPDATE | DELETE }
+ON table_name
+[ FOR EACH { ROW | STATEMENT } ]
+[ WHEN (condition) ]
+BEGIN
+   -- action statements
+END;</pre>
+      <h3 class="sub">Reading the clauses</h3>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">BEFORE | AFTER | INSTEAD OF</span>
+          <span class="card__sub">when the body runs relative to the event</span>
+          <span class="card__data">BEFORE runs while the row still holds its old values; AFTER runs once the change has been applied; INSTEAD OF replaces the operation entirely and is used on views.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">INSERT | UPDATE | DELETE</span>
+          <span class="card__sub">the event being watched</span>
+          <span class="card__data">One trigger watches one kind of event on one table. Watching three events means writing three triggers.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">FOR EACH ROW | STATEMENT</span>
+          <span class="card__sub">how often the body runs</span>
+          <span class="card__data">Per affected row, or once for the whole statement. A statement touching fifty rows fires a row-level trigger fifty times.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">WHEN (condition)</span>
+          <span class="card__sub">the optional &ldquo;if&rdquo;</span>
+          <span class="card__data">Narrows the trigger to rows that matter &mdash; only stock falling below a threshold, only price changes above a certain amount.</span>
+        </button>
+      </div>
+      <p class="callout callout--note">For more examples, visit the <a href="https://www.sqlitetutorial.net/sqlite-trigger/">SQLite Trigger Tutorial</a>.</p>
+    </section>
+
+    <!-- ============ 04 EXAMPLE: REDUCING STOCK ============ -->
+    <section id="stock" class="section">
+      <p class="section__num">04</p>
+      <h2>Example: Reducing Stock After an Order</h2>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">sqlite</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">CREATE TRIGGER reduce_stock
+AFTER INSERT ON OrderHasBook
+BEGIN
+  UPDATE Book
+  SET StockQuantity = StockQuantity - NEW.Quantity
+  WHERE ISBN = NEW.ISBN;
+END;</pre>
+      <p>Each time a new order item is inserted, this trigger automatically decreases the book&rsquo;s stock.</p>
+      <p>The keyword to notice is <code>NEW</code>. Inside the body it refers to the row being inserted, so <code>NEW.Quantity</code> and <code>NEW.ISBN</code> read values from the very row that set the trigger off. For a DELETE trigger the counterpart is <code>OLD</code>; an UPDATE trigger can use both.</p>
+      <p class="callout callout--note">This is the kind of rule that would otherwise have to be repeated in every application that writes an order &mdash; the web app, the admin panel, the nightly import script. Put it in the database once and none of them can forget it.</p>
+      <p class="callout callout--warn"><strong>Note:</strong> SQLite supports triggers but <strong>not</strong> complex stored procedures or user-defined functions.</p>
+    </section>
+
+    <!-- ============ 05 WHEN TO USE TRIGGERS ============ -->
+    <section id="when" class="section">
+      <p class="section__num">05</p>
+      <h2>When to Use Triggers</h2>
+      <p>Use triggers when you need to:</p>
+      <ul class="list">
+        <li><strong>Enforce business rules</strong> &mdash; for example, prevent negative stock levels;</li>
+        <li><strong>Log or audit</strong> data changes;</li>
+        <li><strong>Maintain summary or history tables</strong>; and</li>
+        <li><strong>Automatically validate or clean data.</strong></li>
+      </ul>
+      <p class="callout callout--warn">Avoid triggers when the logic is easier to maintain or debug in the application layer. A trigger runs invisibly: nothing in the calling code mentions it, so a developer reading that code has no hint it exists.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Triggers earn their place on rules that must hold no matter who writes the data."
+           data-no="Not quite. Triggers suit enforcement, auditing, and derived data &mdash; not presentation or one-off application behaviour.">
+        <p class="activity__prompt">Tap every job that is a <strong>good fit</strong> for a trigger.</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">Writing an audit row whenever a price changes</button>
+          <button class="chip" type="button">Formatting dates for display in the user interface</button>
+          <button class="chip" type="button" data-correct="true">Keeping a running total table in step with its detail rows</button>
+          <button class="chip" type="button" data-correct="true">Rejecting an update that would push stock below zero</button>
+          <button class="chip" type="button">A multi-step checkout workflow with payment retries</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 06 FUNCTIONS & STORED ROUTINES ============ -->
+    <section id="functions" class="section">
+      <p class="section__num">06</p>
+      <h2>Functions &amp; Stored Routines</h2>
+      <p>While <strong>SQLite</strong> supports <em>built-in functions</em> such as <code>COUNT()</code>, <code>AVG()</code>, and <code>substr()</code>, and even lets developers <em>define their own functions in application code</em> (in Python or C, for instance), it does <strong>not</strong> allow creating and storing SQL-based functions inside the database.</p>
+      <p>To understand how user-defined functions work in other DBMSs, here is an example using <strong>PostgreSQL</strong>, which supports stored routines written in its procedural language PL/pgSQL:</p>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">postgresql &middot; pl/pgsql</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">CREATE OR REPLACE FUNCTION get_total_sales(publisher_id INT)
+RETURNS NUMERIC AS $$
+DECLARE
+  total NUMERIC;
+BEGIN
+  SELECT SUM(price * quantity)
+  INTO total
+  FROM Orders o
+  JOIN OrderHasBook ob ON o.OrderID = ob.OrderID
+  JOIN Book b ON ob.ISBN = b.ISBN
+  WHERE b.PublisherID = publisher_id;
+  RETURN total;
+END;
+$$ LANGUAGE plpgsql;</pre>
+      <p>You can then call the function like this:</p>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">postgresql</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT get_total_sales(1);</pre>
+      <p>The point of the example is not the syntax but the shape: a named routine, stored in the schema, that takes a parameter, runs a query, and returns a single value &mdash; usable anywhere a value is expected.</p>
+      <p class="callout callout--warn"><strong>Note:</strong> In <strong>SQLite</strong>, you would achieve similar logic by calling built-in functions or writing custom ones in the host application code, but not by defining them as stored routines in the database itself.</p>
+    </section>
+
+    <!-- ============ 07 FUNCTION VS PROCEDURE ============ -->
+    <section id="funcproc" class="section">
+      <p class="section__num">07</p>
+      <h2>Function vs Procedure</h2>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Feature</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Function</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Procedure</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Returns a value</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Yes</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Optional / No</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Used inside SELECT</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Yes</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">No</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Can modify data</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Typically not</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Yes</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Focus</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Computation</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Action / Workflow</td>
+</tr>
+</tbody></table></div>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">computation</p>
+          <h3>Function</h3>
+          <p>Returns a value and can be used inside a SELECT. Typically does not modify data &mdash; you ask it a question and it answers.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">action / workflow</p>
+          <h3>Procedure</h3>
+          <p>May return nothing, cannot be used inside a SELECT, and is expected to modify data. You call it to make something happen.</p>
+        </article>
+      </div>
+      <p class="callout callout--note">The dividing line is the same one SQL draws everywhere else: a function belongs to an <em>expression</em>, a procedure belongs to a <em>statement.</em></p>
+    </section>
+
+    <!-- ============ 08 PROCEDURAL LANGUAGES ============ -->
+    <section id="languages" class="section">
+      <p class="section__num">08</p>
+      <h2>Languages for Stored Routines</h2>
+      <p>Different database systems support various procedural extensions that let you define and store reusable routines inside the database.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">DBMS</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Procedural language</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Notes</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">PostgreSQL</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">PL/pgSQL</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Full procedural language; supports loops, variables, and conditions.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Oracle</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">PL/SQL</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Very similar to PL/pgSQL, widely used for enterprise applications.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">MySQL</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">SQL/PSM</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Allows creation of stored procedures and functions using DELIMITER blocks.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">SQLite</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">&mdash;</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">SQLite does <em>not</em> support stored procedures or persistent user-defined functions written in SQL. However, it provides many <strong>built-in functions</strong> (e.g. COUNT(), ABS(), strftime()) and lets developers define new functions programmatically in C, Python, or other languages when embedding SQLite in an application.</td>
+</tr>
+</tbody></table></div>
+      <p class="callout callout--warn">This table <em>is</em> the portability problem. The same routine written for PostgreSQL will not run on Oracle or MySQL without rewriting, and will not run on SQLite at all.</p>
+    </section>
+
+    <!-- ============ 09 GOOD PRACTICES ============ -->
+    <section id="practices" class="section">
+      <p class="section__num">09</p>
+      <h2>Good Practices</h2>
+      <ul class="list">
+        <li>Keep triggers and procedures <strong>simple</strong> and <strong>predictable.</strong></li>
+        <li><strong>Document clearly</strong> what events or parameters they handle.</li>
+        <li>Avoid <strong>circular or recursive</strong> triggers.</li>
+        <li><strong>Test thoroughly</strong> before deployment.</li>
+        <li>For complex logic, consider implementing it at the <strong>application level.</strong></li>
+      </ul>
+      <p>The third one bites hardest. A trigger on Book that itself updates Book is exactly the shape of an infinite loop; some systems detect it, some cap the recursion depth, and some simply run until something breaks.</p>
+      <p class="callout callout--note">A useful habit: write down, next to every trigger, the single sentence that says what invariant it protects. If you cannot write that sentence, the logic probably belongs in the application.</p>
+    </section>
+
+    <!-- ============ 10 PRACTICE ACTIVITY ============ -->
+    <section id="activity" class="section">
+      <p class="section__num">10</p>
+      <h2>Practice Activity: Working with Triggers in SQLite</h2>
+      <p>In this activity you will <strong>create your own database</strong> and practise writing a trigger in SQLite, using an online SQL playground to execute your commands.</p>
+      <p class="callout callout--note">Go to the SQLite online environment: <a href="https://db-book.com/university-lab-dir/sqljs.html">Execute SQL Online &mdash; db-book.com</a>. Start with a clean database.</p>
+      <p class="hint">Work through the steps in order.</p>
+      <div class="toggle" role="tablist" aria-label="Activity steps">
+        <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="step-1">Step 1</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="step-2">Step 2</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="step-3">Step 3</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="step-4">Step 4</button>
+      </div>
+      <div class="panel" id="step-1">
+        <p class="panel__lede"><strong>Create a new database.</strong> Paste the script below, then click <em>Execute</em>.</p>
+        <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">step 1 &middot; schema + data</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">-- Create tables
+CREATE TABLE Book (
+    ISBN TEXT PRIMARY KEY,
+    Title TEXT NOT NULL,
+    Price REAL NOT NULL,
+    StockQuantity INTEGER NOT NULL,
+    LastUpdated TEXT
+);
+
+CREATE TABLE Orders (
+    OrderID INTEGER PRIMARY KEY AUTOINCREMENT,
+    OrderDate TEXT NOT NULL,
+    Customer TEXT
+);
+
+CREATE TABLE OrderHasBook (
+    OrderID INTEGER,
+    ISBN TEXT,
+    Quantity INTEGER,
+    FOREIGN KEY (OrderID) REFERENCES Orders(OrderID),
+    FOREIGN KEY (ISBN) REFERENCES Book(ISBN)
+);
+
+-- Insert sample data
+INSERT INTO Book VALUES
+('978-0-1234', 'Database Systems', 600.00, 25, NULL),
+('978-0-5678', 'SQL Fundamentals', 480.00, 18, NULL),
+('978-0-9999', 'Advanced Topics in DBMS', 700.00, 12, NULL);
+
+INSERT INTO Orders (OrderDate, Customer)
+VALUES ('2025-11-01', 'Ria Borromeo'),
+       ('2025-11-03', 'Juan dela Cruz');
+
+INSERT INTO OrderHasBook VALUES
+(1, '978-0-1234', 2),
+(1, '978-0-5678', 1),
+(2, '978-0-9999', 1);</pre>
+        <p class="panel__use">This creates three tables &mdash; Book, Orders, and OrderHasBook &mdash; with a few sample rows.</p>
+      </div>
+      <div class="panel is-hidden" id="step-2">
+        <p class="panel__lede"><strong>Inspect the tables.</strong> View the contents of the Book table.</p>
+        <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">step 2</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT * FROM Book;</pre>
+        <p class="panel__use">Notice that the column LastUpdated is currently NULL for all books.</p>
+      </div>
+      <div class="panel is-hidden" id="step-3">
+        <p class="panel__lede"><strong>Create a trigger</strong> that automatically updates LastUpdated whenever a book&rsquo;s record is modified &mdash; its price or stock, for instance.</p>
+        <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">step 3</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">CREATE TRIGGER update_book_timestamp
+AFTER UPDATE ON Book
+BEGIN
+  UPDATE Book
+  SET LastUpdated = CURRENT_TIMESTAMP
+  WHERE ISBN = NEW.ISBN;
+END;</pre>
+        <p class="panel__use">This trigger fires <em>after every UPDATE</em> on the Book table and sets the LastUpdated field to the current time.</p>
+      </div>
+      <div class="panel is-hidden" id="step-4">
+        <p class="panel__lede"><strong>Test the trigger.</strong> Try updating one of the book records, then check the result.</p>
+        <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">step 4 &middot; make a change</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">UPDATE Book
+SET Price = Price + 50
+WHERE ISBN = '978-0-1234';</pre><p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">step 4 &middot; check the result</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT Title, Price, LastUpdated FROM Book;</pre>
+        <p class="panel__use">The LastUpdated value for <em>Database Systems</em> should now show a timestamp indicating when the change was made.</p>
+      </div>
+      <p class="callout callout--warn"><strong>Tip:</strong> Triggers are powerful for automating consistency checks and logs. However, use them with care to avoid circular updates or performance overhead.</p>
+    </section>
+
+    <!-- ============ 11 REFLECTION QUESTIONS ============ -->
+    <section id="reflection" class="section">
+      <p class="section__num">11</p>
+      <h2>Reflection Questions</h2>
+      <p class="hint">Answer for yourself first, then tap to compare.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Why AFTER UPDATE rather than BEFORE UPDATE?</span>
+          <span class="card__sub">question 1</span>
+          <span class="card__data">Because the stamp should record a change that actually happened. A BEFORE trigger fires while the row still holds its old values and before the update is known to succeed, so a timestamp written there could describe an operation that was never applied.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">What if multiple updates were made at once?</span>
+          <span class="card__sub">question 2</span>
+          <span class="card__data">A row-level trigger fires once per affected row, so each updated book gets its own timestamp. Worth noticing too: the trigger body is itself an UPDATE on Book, which would normally set the trigger off again &mdash; SQLite does not run triggers recursively by default, which is the only reason this example terminates.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">How could you log changes to a BookAudit table?</span>
+          <span class="card__sub">question 3</span>
+          <span class="card__data">Create a BookAudit table holding the ISBN, the old and new values you care about, and a timestamp &mdash; then change the trigger body from an UPDATE to an INSERT that writes OLD.Price and NEW.Price into it. That version has no recursion problem at all, since it never writes back to Book.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li>Moving business logic into the database buys <strong>efficiency, consistency, security, and reusability</strong> &mdash; at the cost of <strong>portability</strong>, since syntax varies between systems.</li>
+        <li><strong>Triggers</strong> automate actions when specific data changes occur. They are <em>when&ndash;if&ndash;then</em> rules: an event, an optional condition, and an action.</li>
+        <li>A trigger declares BEFORE, AFTER, or INSTEAD OF; the event (INSERT, UPDATE, DELETE); the table; row or statement granularity; and an optional WHEN condition.</li>
+        <li>Inside the body, <code>NEW</code> refers to the incoming row and <code>OLD</code> to the row being replaced or removed.</li>
+        <li>Use triggers to enforce business rules, log or audit changes, maintain summary tables, and validate data. Avoid them when the logic is easier to maintain or debug in the application layer.</li>
+        <li><strong>Stored procedures</strong> and <strong>functions</strong> encapsulate logic for reuse and consistency. A function returns a value and works inside a SELECT; a procedure acts and does not.</li>
+        <li><strong>SQLite</strong> supports triggers and built-in or application-defined functions, but does <em>not</em> store SQL-based procedures or user-defined functions inside the schema. <strong>PostgreSQL</strong> provides PL/pgSQL, Oracle PL/SQL, and MySQL SQL/PSM.</li>
+        <li>Good practice: keep routines simple and predictable, document what they handle, avoid circular or recursive triggers, test thoroughly, and push complex logic up into the application.</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="Topic4.html">&larr; Topic 4</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <span class="pager__spacer"></span>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Triggers and Stored Routines,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Practice activity uses the SQL.js playground at db-book.com; further trigger examples at sqlitetutorial.net.</p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "Which is the main drawback of putting business logic inside the database?",
+    "options": [
+      "It runs more slowly than application code",
+      "It reduces portability, since syntax varies between DBMSs",
+      "It cannot enforce rules consistently across applications",
+      "It exposes sensitive operations outside the DBMS"
+    ],
+    "answer": 1,
+    "why": "Efficiency, consistency, security, and reusability are the advantages. The trade-off is <strong>portability</strong> &mdash; database-side logic is written in a dialect that may not exist on another system."
+  },
+  {
+    "stem": "A trigger is best described as which kind of rule?",
+    "options": ["A call-and-return rule", "A when&ndash;if&ndash;then rule", "A read-only constraint", "A scheduled batch job"],
+    "answer": 1,
+    "why": "A trigger is a <strong>when&ndash;if&ndash;then</strong> rule: when an event happens, and a condition is met, then perform an action. Nothing invokes it explicitly &mdash; the event does."
+  },
+  {
+    "stem": "In the trigger body <code>SET StockQuantity = StockQuantity - NEW.Quantity</code>, what does NEW refer to?",
+    "options": [
+      "The row as it existed before the statement",
+      "The row being inserted that set the trigger off",
+      "A temporary table created by the trigger",
+      "The next row the statement will process"
+    ],
+    "answer": 1,
+    "why": "<code>NEW</code> refers to the incoming row &mdash; the one being inserted or the post-update version. <code>OLD</code> is its counterpart for the row being replaced or deleted."
+  },
+  {
+    "stem": "What does the optional WHEN clause in a trigger definition do?",
+    "options": [
+      "Schedules the trigger to run at a particular time",
+      "Chooses between BEFORE and AFTER",
+      "Restricts the body to rows for which the condition holds",
+      "Names the table the trigger watches"
+    ],
+    "answer": 2,
+    "why": "WHEN is the &ldquo;if&rdquo; of the when&ndash;if&ndash;then rule. If it evaluates false for a row, the body is skipped for that row and the original statement proceeds unaffected."
+  },
+  {
+    "stem": "An UPDATE statement modifies 50 rows in a table that has a FOR EACH ROW trigger. How many times does the trigger body run?",
+    "options": ["Once", "Once per column changed", "50 times", "Never &mdash; row triggers only fire on INSERT"],
+    "answer": 2,
+    "why": "A row-level trigger fires <strong>once per affected row</strong>. A statement-level trigger would fire once for the whole statement &mdash; which is exactly why the distinction matters for performance."
+  },
+  {
+    "stem": "Which task is the WORST fit for a trigger?",
+    "options": [
+      "Recording an audit row whenever a price changes",
+      "Preventing stock from falling below zero",
+      "A multi-step checkout workflow with payment retries",
+      "Keeping a summary table in step with its detail rows"
+    ],
+    "answer": 2,
+    "why": "Avoid triggers when the logic is easier to maintain or debug in the application layer. A multi-step workflow with retries is exactly that &mdash; and a trigger's invisibility makes such logic very hard to follow."
+  },
+  {
+    "stem": "Which statement about SQLite is correct?",
+    "options": [
+      "It supports neither triggers nor built-in functions",
+      "It supports triggers, but not SQL-based stored procedures or user-defined functions",
+      "It supports stored procedures but not triggers",
+      "It supports PL/pgSQL routines stored in the schema"
+    ],
+    "answer": 1,
+    "why": "SQLite supports <strong>triggers</strong> and many <strong>built-in functions</strong>, and lets developers define functions in the host application code &mdash; but it does not store SQL-based procedures or user-defined functions in the schema."
+  },
+  {
+    "stem": "Which pair of properties belongs to a FUNCTION rather than a procedure?",
+    "options": [
+      "Returns a value; usable inside a SELECT",
+      "Returns nothing; focused on workflow",
+      "Cannot be reused; must be recompiled each call",
+      "Always modifies data; cannot be nested"
+    ],
+    "answer": 0,
+    "why": "A <strong>function</strong> returns a value and can be used inside a SELECT, and typically does not modify data. A <strong>procedure</strong> may return nothing, cannot sit inside a SELECT, and is expected to act on data."
+  },
+  {
+    "stem": "PL/pgSQL, PL/SQL, and SQL/PSM belong to which systems respectively?",
+    "options": [
+      "MySQL, PostgreSQL, Oracle",
+      "PostgreSQL, Oracle, MySQL",
+      "Oracle, SQLite, PostgreSQL",
+      "SQLite, MySQL, Oracle"
+    ],
+    "answer": 1,
+    "why": "<strong>PostgreSQL</strong> uses PL/pgSQL, <strong>Oracle</strong> uses PL/SQL, and <strong>MySQL</strong> uses SQL/PSM with DELIMITER blocks. SQLite has no procedural language of its own."
+  },
+  {
+    "stem": "Which of these is listed as a good practice for triggers and stored routines?",
+    "options": [
+      "Chain triggers so that each one sets off the next",
+      "Keep them simple and predictable, and avoid circular or recursive triggers",
+      "Move as much application logic as possible into the database",
+      "Skip documentation, since the trigger definition is self-explanatory"
+    ],
+    "answer": 1,
+    "why": "Keep them <strong>simple and predictable</strong>, document what they handle, <strong>avoid circular or recursive triggers</strong>, test thoroughly, and push complex logic up to the application level."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

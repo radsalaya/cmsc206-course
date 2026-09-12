@@ -586,7 +586,7 @@
       <text x="272" y="46" text-anchor="middle" dominant-baseline="central">Married to</text>
     </svg>
   </div>
-
+<figcaption>&ldquo;Married to&rdquo; relates Person to Person, so <strong>two lines</strong> run from the same entity into the diamond &mdash; one for each role in the relationship.</figcaption>
 </figure>
         </article>
         <article class="type">
@@ -643,12 +643,37 @@
       </div>
 
       <div class="panel" id="panelOneOne" role="tabpanel">
-        <p class="panel__lede">Each entity in each set can take part <strong>only once</strong> in the relationship.</p>
-        <div class="relgram">
-          <div class="relgram__end"><div class="relgram__box">Surgeon</div><span class="relgram__num">1</span></div>
-          <div class="relgram__pill">Headed by</div>
-          <div class="relgram__end"><span class="relgram__num">1</span><div class="relgram__box">HOD</div></div>
-        </div>
+        <p class="panel__lede"><strong>One-to-one :</strong> When each entity in each entity set can take part
+only once in the relationship, the cardinality is one-to-one. Let us
+assume that a male can marry one female and a female can marry
+one male. So the relationship will be one-to-one.</p>
+        <figure class="figure">
+  <div class="erfrag">
+    <svg class="erfrag__art" viewBox="0 0 470 92"
+         fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <!-- entity -->
+      <rect x="6" y="26" width="120" height="40" />
+      <text x="66" y="46" text-anchor="middle" dominant-baseline="central">Surgeon</text>
+
+      <!-- link, with its cardinality -->
+      <line x1="126" y1="46" x2="166" y2="46" />
+      <text class="erfrag__n" x="146" y="33" text-anchor="middle">1</text>
+
+      <!-- relationship -->
+      <polygon points="236,10 306,46 236,82 166,46" stroke-linejoin="round" />
+      <text x="236" y="46" text-anchor="middle" dominant-baseline="central">Headed by</text>
+
+      <!-- link, with its cardinality -->
+      <line x1="306" y1="46" x2="346" y2="46" />
+      <text class="erfrag__n" x="326" y="33" text-anchor="middle">1</text>
+
+      <!-- entity -->
+      <rect x="346" y="26" width="118" height="40" />
+      <text x="405" y="46" text-anchor="middle" dominant-baseline="central">HOD</text>
+    </svg>
+  </div>
+  <figcaption>A one-to-one relationship: the <strong>1</strong> on each link says an instance on that side pairs with exactly one instance on the other.</figcaption>
+</figure>
         <p class="panel__use">Example: a surgeon department is headed by one HOD, and that HOD heads one department.</p>
       </div>
       <div class="panel is-hidden" id="panelOneMany" role="tabpanel">

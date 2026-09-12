@@ -77,6 +77,33 @@
   .ermap__col::before{ height:1rem; }
   .ermap__col::after{ top:.95rem; }
 }
+
+  /* ER notation key — self-contained, uses the shared design tokens */
+.ernote{
+  background:var(--card); border:1px solid var(--rule); border-radius:var(--r);
+  overflow:hidden;
+}
+.ernote__row{
+  display:grid; grid-template-columns:7.5rem 1fr; align-items:center;
+  gap:0 1.1rem; padding:.85rem 1.1rem;
+  border-top:1px solid var(--rule-soft);
+}
+.ernote__row:first-child{ border-top:0; }
+.ernote__art{
+  display:block; width:100%; height:auto;
+  color:var(--ink);                 /* shapes inherit this via currentColor */
+}
+.ernote__name{
+  margin:0; font-family:var(--display); font-weight:600; font-size:1rem; line-height:1.25;
+}
+.ernote__what{
+  margin:.15rem 0 0; font-size:.88rem; line-height:1.5; color:var(--ink-soft);
+}
+
+@media (max-width:520px){
+  .ernote__row{ grid-template-columns:5.5rem 1fr; gap:0 .9rem; padding:.75rem .9rem; }
+}
+  
 </style>
 
 </head>
@@ -274,7 +301,11 @@
       <p class="hint">Tap a shape to see what it represents.</p>
       <figure class="figure">
         <div class="shapes" data-detail-target="#notationDetail">
-          <button class="shape-btn" type="button" data-detail="n-rect" aria-expanded="false"><span class="swatch"></span><span class="shape-name">?</span></button>
+          <button class="shape-btn" type="button" data-detail="n-rect" aria-expanded="false"><span class="swatch"></span><span class="shape-name">
+            <svg class="ernote__art" viewBox="0 0 120 56" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+        <rect x="21" y="13" width="78" height="30" />
+      </svg>
+          </span></button>
           <button class="shape-btn" type="button" data-detail="n-ellipse" aria-expanded="false"><span class="swatch ellipse"></span><span class="shape-name">?</span></button>
           <button class="shape-btn" type="button" data-detail="n-diamond" aria-expanded="false"><span class="swatch diamond"></span><span class="shape-name">?</span></button>
           <button class="shape-btn" type="button" data-detail="n-line" aria-expanded="false"><span class="swatch line"></span><span class="shape-name">?</span></button>

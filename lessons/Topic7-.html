@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 7 &middot; Query Processing and Optimization &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic7">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 7</p>
+  <h1>Query Processing<br>and Optimization</h1>
+  <p class="hero__lede">You wrote <em>what</em> you wanted. The DBMS decides <em>how</em> to get it &mdash; validating, parsing, costing out rival plans, and picking the cheapest one. This is what happens in the moment between pressing execute and seeing rows.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>11</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic7</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#lifecycle" class="rail__link"><span>02</span> The Query Lifecycle</a></li>
+      <li><a href="#parsing" class="rail__link"><span>03</span> Validating and Parsing</a></li>
+      <li><a href="#basics" class="rail__link"><span>04</span> Optimization Basics</a></li>
+      <li><a href="#naive" class="rail__link"><span>05</span> Example 1: The Na&iuml;ve Way</a></li>
+      <li><a href="#better" class="rail__link"><span>06</span> Example 2: A Better Way</a></li>
+      <li><a href="#cost" class="rail__link"><span>07</span> Cost Estimation</a></li>
+      <li><a href="#explain" class="rail__link"><span>08</span> Viewing the Query Plan</a></li>
+      <li><a href="#nice" class="rail__link"><span>09</span> Being Nice to Your Optimizer</a></li>
+      <li><a href="#practice" class="rail__link"><span>10</span> Practice Playground</a></li>
+      <li><a href="#reflection" class="rail__link"><span>11</span> Reflection Questions</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 INTRODUCTION ============ -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>In previous modules we learned how to <strong>write</strong> SQL queries. But how does the RDBMS <strong>process</strong> those queries internally?</p>
+          <p>This lesson gives a high-level view of what happens after a query is executed:</p>
+          <ul class="list">
+            <li>How the query is validated and parsed;</li>
+            <li>How it is optimized to choose the best execution plan; and</li>
+            <li>How SQL can be written in ways that are easier to optimize.</li>
+          </ul>
+          <p>By the end, you will understand how query optimization makes SQL <strong>fast and scalable</strong> &mdash; and why the same result set can take either ten milliseconds or ten seconds depending on a decision you never made yourself.</p>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Validate &rarr; parse &rarr; optimize &rarr; execute</li>
+            <li>SQL is declarative</li>
+            <li>Selection early, projection early</li>
+            <li>Catalog statistics drive cost</li>
+            <li>EXPLAIN QUERY PLAN</li>
+          </ul>
+        </aside>
+      </div>
+
+      <h3 class="sub">Quick check</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Optimization is about turning a correct query into an efficient plan &mdash; correctness was already settled during validation."
+           data-no="Not quite. Checking syntax is validation, and storing results is something else entirely. Optimization is about choosing how to execute.">
+        <p class="activity__prompt">Which of the following best describes <strong>query optimization</strong>?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">Transforming a query into an efficient execution plan</button>
+          <button class="chip" type="button">Checking if the query syntax is correct</button>
+          <button class="chip" type="button">Translating SQL into English</button>
+          <button class="chip" type="button">Storing the query result into a table</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 02 THE QUERY LIFECYCLE ============ -->
+    <section id="lifecycle" class="section">
+      <p class="section__num">02</p>
+      <h2>The Query Lifecycle</h2>
+      <p>When a query is sent to the DBMS, it goes through four main stages.</p>
+      <p class="hint">Tap each stage to see what it does.</p>
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Validation</b></span>
+          <span class="quad__short">is this query legal?</span>
+          <span class="quad__long">Checks the query against both the syntax rules of SQL and the schema &mdash; do these tables exist, do these columns exist, are the types compatible.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Parsing</b> &amp; translation</span>
+          <span class="quad__short">SQL becomes a structure</span>
+          <span class="quad__long">Converts the SQL text into an internal representation &mdash; a parse tree, and from there a relational algebra expression the system can manipulate.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Optimization</b></span>
+          <span class="quad__short">which of the many plans?</span>
+          <span class="quad__long">Determines the most efficient way to execute the query. Many plans return the same rows; the optimizer picks the one with the lowest estimated cost.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Execution</b></span>
+          <span class="quad__short">run it, return rows</span>
+          <span class="quad__long">Carries out the chosen plan &mdash; opening indexes, scanning pages, joining, projecting &mdash; and returns the results.</span>
+        </button>
+      </div>
+      <p class="equation">SQL query &rarr; (parsed + optimized) &rarr; query plan &rarr; results</p>
+
+      <h3 class="sub">Example</h3>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT * FROM employees WHERE dept_id = 3;</pre>
+      <p>The DBMS validates the table and column, parses the query, optimizes it, and then executes it using either an index or a sequential scan.</p>
+      <p class="callout callout--note"><strong>Reflection:</strong> why does optimization occur <em>after</em> parsing and not before? Consider what the optimizer needs to work on &mdash; you cannot rearrange the pieces of a query until something has broken it into pieces.</p>
+    </section>
+
+    <!-- ============ 03 VALIDATING AND PARSING ============ -->
+    <section id="parsing" class="section">
+      <p class="section__num">03</p>
+      <h2>Validating and Parsing</h2>
+      <p>In the validation and parsing stage, the DBMS:</p>
+      <ul class="list">
+        <li>Checks syntax and structure;</li>
+        <li>Verifies that table and column names exist;</li>
+        <li>Ensures data types and functions are valid; and</li>
+        <li>Builds a <mark>parse tree</mark> &mdash; an internal structure representing the query.</li>
+      </ul>
+
+      <h3 class="sub">Example 1 &middot; a query that passes</h3>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">example 1 &middot; valid</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT city_name FROM City WHERE city_population &gt; 100000;</pre>
+      <p>The parser checks the table and column names and confirms that the WHERE clause is valid.</p>
+
+      <h3 class="sub">Example 2 &middot; a query that fails</h3>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">example 2 &middot; fails validation</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT name, salary FROM worker WHERE age = 'thirty';</pre>
+      <p>This query fails validation because of a <strong>type mismatch</strong>: <code>'thirty'</code> is not numeric. Notice that nothing here is wrong with the <em>grammar</em> &mdash; the failure comes from checking the query against the schema, which is why validation needs the catalog and not just a parser.</p>
+
+      <h3 class="sub">Quick check</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. The parser only establishes that the query is legal and what it means. Choosing how to run it is the optimizer's job."
+           data-no="Not quite. Deciding the best way to execute a query is the optimizer's job, not the parser's.">
+        <p class="activity__prompt">True or false: <strong>the parser determines the best way to execute the query.</strong></p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">False</button>
+          <button class="chip" type="button">True</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 04 OPTIMIZATION BASICS ============ -->
+    <section id="basics" class="section">
+      <p class="section__num">04</p>
+      <h2>Optimization Basics</h2>
+      <div class="definition">
+        <p class="definition__tag">Why an optimizer exists at all</p>
+        <p>SQL is a <mark>declarative</mark> language. It specifies <em>what</em> we want, not <em>how</em> to obtain it. The optimizer decides <strong>how</strong> to execute it efficiently.</p>
+      </div>
+      <p>A query can have many equivalent plans &mdash; all returning exactly the same rows. The optimizer selects the one with the <strong>lowest estimated cost.</strong></p>
+
+      <h3 class="sub">Example</h3>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT * FROM sales WHERE region = 'APAC';</pre>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Plan</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What it does</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Rows touched</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Plan A</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Sequential scan of all rows, then filter on region</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">10 M rows</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Plan B</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Index scan using <code>region_idx</code></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">10 K rows</td>
+</tr>
+</tbody></table></div>
+      <p>The optimizer selects <strong>Plan B</strong>, because it minimizes I/O and CPU cost. Same answer, a thousandth of the rows touched.</p>
+      <p class="callout callout--note"><strong>Reflection:</strong> what does &ldquo;cost&rdquo; mean here? Consider memory usage, disk I/O, and CPU time &mdash; and which of the three is usually the one that hurts.</p>
+    </section>
+
+    <!-- ============ 05 EXAMPLE 1: THE NAIVE WAY ============ -->
+    <section id="naive" class="section">
+      <p class="section__num">05</p>
+      <h2>Example 1: The Na&iuml;ve Way</h2>
+      <p>Suppose there are two tables:</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Table</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Schema</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Size</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Country</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;"><code>country_id, country_population, country_name</code></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">200 rows</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>City</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;"><code>city_id, country_id, city_population, city_name</code></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">10,000 rows</td>
+</tr>
+</tbody></table></div>
+      <p>And this query:</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT City.city_name
+FROM City NATURAL JOIN Country
+WHERE City.city_population &gt; 100000
+  AND Country.country_name = 'France';</pre>
+
+      <h3 class="sub">The na&iuml;ve plan</h3>
+      <ol class="list">
+        <li>Perform a Cartesian product &mdash; <strong>2,000,000 tuples</strong>;</li>
+        <li>Apply the join and WHERE filters;</li>
+        <li>Project <code>city_name</code>.</li>
+      </ol>
+      <p>This plan produces the <em>correct</em> result, but it creates a large intermediate table, wasting both memory and processing time. Two hundred countries times ten thousand cities is two million rows built in order to throw almost all of them away.</p>
+      <p class="callout callout--warn"><strong>Reflection:</strong> which step introduces the most inefficiency, and why? Think about how many of those two million tuples survive the filters.</p>
+    </section>
+
+    <!-- ============ 06 EXAMPLE 2: A BETTER WAY ============ -->
+    <section id="better" class="section">
+      <p class="section__num">06</p>
+      <h2>Example 2: A Better Way</h2>
+      <h3 class="sub">The optimized plan</h3>
+      <ol class="list">
+        <li>Filter <code>City</code> first (<code>city_population &gt; 100000</code>);</li>
+        <li>Filter <code>Country</code> (<code>country_name = 'France'</code>);</li>
+        <li>Join the smaller intermediate tables;</li>
+        <li>Project <code>city_name</code>.</li>
+      </ol>
+      <p>This drastically reduces intermediate results and execution time. Nothing about the answer changes &mdash; only the order in which the work is done.</p>
+
+      <h3 class="sub">A second example</h3>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT e.name, d.dept_name
+FROM employees e, departments d
+WHERE e.dept_id = d.dept_id AND d.location = 'Manila';</pre>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Order of work</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Result</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Join first, then filter</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Slow &mdash; every employee is paired with every department before anything is discarded</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Filter departments for 'Manila' first, then join</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Faster &mdash; the join runs against a handful of departments</td>
+</tr>
+</tbody></table></div>
+
+      <h3 class="sub">Quick check</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Deferring filtering is the opposite of the rule &mdash; selection should happen as early as possible."
+           data-no="Not quite. Performing selection early, dropping unneeded attributes, and joining the most restrictive relations first are all good heuristics.">
+        <p class="activity__prompt">Which of the following is <strong>not</strong> a good heuristic?</p>
+        <div class="chips">
+          <button class="chip" type="button">Perform selection early</button>
+          <button class="chip" type="button">Avoid useless attributes</button>
+          <button class="chip" type="button" data-correct="true">Defer filtering until the end</button>
+          <button class="chip" type="button">Perform most restrictive joins first</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 07 COST ESTIMATION ============ -->
+    <section id="cost" class="section">
+      <p class="section__num">07</p>
+      <h2>Cost Estimation</h2>
+      <p>The optimizer cannot try every possible query plan &mdash; it would take too long. Instead it <strong>estimates the cost</strong> of each plan using information stored in the database&rsquo;s <mark>catalog statistics</mark>.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Statistic</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What it tells the optimizer</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Table size</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">How many tuples a scan would have to read.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Selectivity</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The value distribution of a column &mdash; how many rows a condition is likely to keep.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Indexes and constraints</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Which access paths are available besides a full scan.</td>
+</tr>
+</tbody></table></div>
+      <p>Using these statistics, the optimizer predicts which plan is likely to run the fastest, without actually executing them all. Estimating is the whole point: measuring every candidate would cost more than running the query badly once.</p>
+      <p class="callout callout--warn">However, <strong>outdated statistics</strong> can mislead the optimizer. If the catalog still reflects old data distributions, the DBMS might select a plan that scans millions of rows unnecessarily &mdash; a query that was fast last month and mysteriously is not today.</p>
+      <p>In systems such as <strong>PostgreSQL</strong>, the <code>ANALYZE</code> command refreshes statistics, updating distinct value counts and column histograms to improve cost estimates.</p>
+    </section>
+
+    <!-- ============ 08 VIEWING THE QUERY PLAN ============ -->
+    <section id="explain" class="section">
+      <p class="section__num">08</p>
+      <h2>Viewing the Query Plan</h2>
+      <p>You can see how the database intends to execute a query with the <code>EXPLAIN QUERY PLAN</code> command in SQLite. It displays the internal steps the optimizer plans to take &mdash; whether it will use an index, or perform a full table scan.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">EXPLAIN QUERY PLAN
+SELECT city_name
+FROM City
+WHERE city_population &gt; 100000;</pre>
+      <p>This produces output similar to:</p>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">output</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SCAN TABLE City
+SEARCH TABLE City USING INDEX city_population_idx</pre>
+      <p>The result shows whether the optimizer selected an efficient access path. <strong>SCAN</strong> means every row was read; <strong>SEARCH &hellip; USING INDEX</strong> means it jumped straight to the matching rows. You can test this in the SQLite playground to explore how different queries produce different execution plans.</p>
+      <p class="hint">Note: the wording of the output may vary slightly depending on the SQLite version.</p>
+    </section>
+
+    <!-- ============ 09 BEING NICE TO YOUR OPTIMIZER ============ -->
+    <section id="nice" class="section">
+      <p class="section__num">09</p>
+      <h2>Being Nice to Your Optimizer</h2>
+      <p>The optimizer is powerful, but SQL design can help it do better:</p>
+      <ul class="list">
+        <li>Avoid using functions on indexed columns, for example <code>UPPER(name)</code>;</li>
+        <li>Use consistent data types in joins;</li>
+        <li>Minimize unnecessary subqueries; and</li>
+        <li>Leverage indexes appropriately.</li>
+      </ul>
+
+      <h3 class="sub">Bad vs good SQL</h3>
+      <div style="display:grid; gap:1.2rem; grid-template-columns:repeat(auto-fit,minmax(17rem,1fr)); align-items:start;"><div><p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">bad</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">-- Bad: prevents index use
+SELECT * FROM orders
+WHERE YEAR(order_date) = 2025;</pre></div><div><p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">good</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">-- Good: index-friendly
+SELECT * FROM orders
+WHERE order_date BETWEEN '2025-01-01'
+                     AND '2025-12-31';</pre></div></div>
+      <p>Wrapping the indexed column in a function means the index on <code>order_date</code> can no longer be used &mdash; the stored values are dates, but the condition is about something computed <em>from</em> them, and the index knows nothing about that. Rewriting the condition as a range over the raw column puts the index back in play.</p>
+      <p class="callout callout--note"><em>Note:</em> an <strong>index</strong> functions like a book index. It helps the database locate rows quickly without reading the entire table. We will learn how indexes are structured and maintained in the next lesson, <em>Storage, Indexing, and Recovery.</em></p>
+
+      <h3 class="sub">Quick check</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. A function wrapped around an indexed column hides the stored values from the index."
+           data-no="Not quite. Simple comparisons, equality, and BETWEEN all work with an index. It is the function wrapper that defeats it.">
+        <p class="activity__prompt">Which of the following may <strong>prevent index use</strong>?</p>
+        <div class="chips">
+          <button class="chip" type="button">Using simple comparisons</button>
+          <button class="chip" type="button">Using the <code>=</code> operator</button>
+          <button class="chip" type="button" data-correct="true">Using function wrappers on indexed columns</button>
+          <button class="chip" type="button">Filtering with <code>BETWEEN</code></button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 10 PRACTICE PLAYGROUND ============ -->
+    <section id="practice" class="section">
+      <p class="section__num">10</p>
+      <h2>Practice: Query Optimization Playground</h2>
+      <p>Now it is your turn. You will work with a small database in the SQLite playground: <a href="https://db-book.com/university-lab-dir/sqljs.html">Execute SQL Online &ndash; db-book.com</a>. Open the link and you will see an SQL editor and an output panel.</p>
+
+      <h3 class="sub">Step 1 &middot; Set up the database</h3>
+      <p>Copy and run the setup script below to create the tables and sample data.</p>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">database setup &middot; ddl</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">CREATE TABLE Country(
+    country_id INTEGER PRIMARY KEY,
+    country_name TEXT,
+    population INTEGER
+);
+
+CREATE TABLE City(
+    city_id INTEGER PRIMARY KEY,
+    country_id INTEGER,
+    city_name TEXT,
+    city_population INTEGER,
+    FOREIGN KEY(country_id) REFERENCES Country(country_id)
+);
+
+INSERT INTO Country VALUES
+(1, 'France', 67000000),
+(2, 'Spain', 47000000);
+
+INSERT INTO City VALUES
+(1, 1, 'Paris', 2148000),
+(2, 1, 'Lyon', 515695),
+(3, 2, 'Madrid', 3266000),
+(4, 2, 'Barcelona', 1620000);</pre>
+
+      <h3 class="sub">Step 2 &middot; Write it, then optimize it</h3>
+      <p><strong>Write a query</strong> that lists city names for cities in France with a population above 100,000 &mdash; your own way first. Then think about how you could rewrite it to handle less data before the join.</p>
+      <p class="hint">Try both yourself before switching tabs. Reading the answer is not the exercise.</p>
+      <div class="toggle" role="tablist" aria-label="Practice queries">
+        <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="pr-try">Your turn</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="pr-naive">Na&iuml;ve version</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="pr-opt">Optimized version</button>
+      </div>
+      <div class="panel" id="pr-try">
+        <p class="panel__lede">Hint: think about how you might join the two tables and apply the conditions &mdash; and, for the second version, about which rows you could throw away <em>before</em> the join rather than after it.</p>
+        <p class="panel__use">Switch tabs only once you have run something of your own.</p>
+      </div>
+      <div class="panel is-hidden" id="pr-naive">
+        <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">-- Na&iuml;ve query plan
+SELECT City.city_name
+FROM City NATURAL JOIN Country
+WHERE City.city_population &gt; 100000
+  AND Country.country_name = 'France';</pre>
+        <p class="panel__use">One possible na&iuml;ve version: join everything, then filter.</p>
+      </div>
+      <div class="panel is-hidden" id="pr-opt">
+        <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">-- Optimized query plan
+-- Step 1: filter cities
+CREATE TEMP VIEW T1 AS
+SELECT city_id, country_id, city_name
+FROM City
+WHERE city_population &gt; 100000;
+
+-- Step 2: filter countries
+CREATE TEMP VIEW T2 AS
+SELECT country_id
+FROM Country
+WHERE country_name = 'France';
+
+-- Step 3: join results
+SELECT city_name
+FROM T1 JOIN T2 USING(country_id);</pre>
+        <p class="panel__use">Filter each table down first, then join the two small results.</p>
+      </div>
+
+      <h3 class="sub">Step 3 &middot; Compare the plans</h3>
+      <p>Compare their execution plans with <code>EXPLAIN QUERY PLAN</code>. This shows the steps SQLite&rsquo;s optimizer decided to take.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">EXPLAIN QUERY PLAN
+SELECT City.city_name
+FROM City NATURAL JOIN Country
+WHERE City.city_population &gt; 100000
+  AND Country.country_name = 'France';
+
+EXPLAIN QUERY PLAN
+SELECT city_name
+FROM T1 JOIN T2 USING(country_id);</pre>
+      <p>Look for keywords like <strong>SCAN</strong> or <strong>SEARCH USING INDEX</strong> to identify whether SQLite used an index or scanned the entire table.</p>
+      <p class="callout callout--note">On four cities and two countries the timings will be identical &mdash; the dataset is far too small for the difference to show. What you are reading is the <em>shape</em> of the plan. Imagine the same two shapes over the ten thousand cities from Example 1.</p>
+    </section>
+
+    <!-- ============ 11 REFLECTION QUESTIONS ============ -->
+    <section id="reflection" class="section">
+      <p class="section__num">11</p>
+      <h2>Reflection Questions</h2>
+      <p class="hint">Answer from your own runs first, then tap to compare your thinking.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Which plan executed faster?</span>
+          <span class="card__sub">and could you tell?</span>
+          <span class="card__data">Consider whether the dataset was large enough for a difference to be measurable at all, and what you would have to change about it before a stopwatch became a useful instrument here.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Why?</span>
+          <span class="card__sub">what the plan actually did</span>
+          <span class="card__data">Go back to the EXPLAIN output. Count how many rows each step had to handle in each plan, and ask where the intermediate result was largest &mdash; that is usually where the time goes.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">What SQL changes improved it?</span>
+          <span class="card__sub">from heuristic to syntax</span>
+          <span class="card__data">Name the specific heuristic each change corresponds to &mdash; selection early, projection early, most restrictive join first &mdash; and consider which of them SQLite would have applied on its own even if you had written the na&iuml;ve version.</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li><strong>Validation and parsing</strong> &mdash; the DBMS verifies that the query is syntactically correct and that all referenced tables, columns, and data types exist, then builds a parse tree.</li>
+        <li><strong>Translation and optimization</strong> &mdash; the query is transformed into an internal representation, and the optimizer selects the most efficient execution plan based on estimated costs.</li>
+        <li><strong>Execution</strong> &mdash; the DBMS carries out the selected plan and returns the requested data.</li>
+        <li>SQL is <strong>declarative</strong>: you state what you want, and the optimizer chooses how. Many plans return the same rows; the cheapest estimated one wins.</li>
+        <li>The optimizer uses both <strong>heuristic rules</strong> &mdash; selection early, projection early, most restrictive joins first &mdash; and <strong>cost-based decisions</strong> drawn from catalog statistics.</li>
+        <li><strong>Catalog statistics</strong> such as table sizes, value distributions, and available indexes inform those cost estimates. Outdated statistics mislead the optimizer; <code>ANALYZE</code> refreshes them in PostgreSQL.</li>
+        <li>Writing SQL that enables <strong>early filtering, selective joins, and index use</strong> can significantly improve performance.</li>
+        <li>Wrapping an indexed column in a function prevents the index from being used. Rewriting the condition as a range over the raw column restores it.</li>
+        <li><code>EXPLAIN QUERY PLAN</code> lets you examine the optimizer&rsquo;s chosen strategy &mdash; look for SCAN versus SEARCH &hellip; USING INDEX.</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="Topic6.html">&larr; Topic 6</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <span class="pager__spacer"></span>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Query Processing and Optimization,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Practice environment: db-book.com online SQL playground.</p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "Which of the following best describes query optimization?",
+    "options": [
+      "Checking if the query syntax is correct",
+      "Transforming a query into an efficient execution plan",
+      "Translating SQL into English",
+      "Storing the query result into a table"
+    ],
+    "answer": 1,
+    "why": "Optimization <strong>transforms a query into an efficient execution plan.</strong> Checking syntax happens earlier, during validation."
+  },
+  {
+    "stem": "What is the correct order of the four stages a query passes through?",
+    "options": [
+      "Parsing &rarr; validation &rarr; execution &rarr; optimization",
+      "Optimization &rarr; validation &rarr; parsing &rarr; execution",
+      "Validation &rarr; parsing and translation &rarr; optimization &rarr; execution",
+      "Validation &rarr; optimization &rarr; parsing and translation &rarr; execution"
+    ],
+    "answer": 2,
+    "why": "<strong>Validation, parsing and translation, optimization, execution.</strong> Optimization comes after parsing because the optimizer works on the internal representation, not on raw SQL text."
+  },
+  {
+    "stem": "SELECT name, salary FROM worker WHERE age = 'thirty'; fails. At which stage, and why?",
+    "options": [
+      "Optimization &mdash; no efficient plan exists for this condition",
+      "Validation &mdash; a type mismatch, since 'thirty' is not numeric",
+      "Execution &mdash; the comparison returns no rows",
+      "Parsing &mdash; the SQL grammar is malformed"
+    ],
+    "answer": 1,
+    "why": "The grammar is perfectly fine. It fails <strong>validation</strong> because of a <strong>type mismatch</strong> &mdash; catching it requires checking the query against the schema, not just the syntax rules."
+  },
+  {
+    "stem": "True or false: the parser determines the best way to execute the query.",
+    "options": ["True", "False"],
+    "answer": 1,
+    "why": "<strong>False.</strong> The parser establishes that the query is legal and what it means. Deciding how to run it is the query optimizer's job."
+  },
+  {
+    "stem": "Why does a declarative language like SQL need an optimizer at all?",
+    "options": [
+      "Because SQL specifies what we want but not how to obtain it",
+      "Because SQL cannot express joins without help",
+      "Because every SQL query has exactly one possible execution plan",
+      "Because the user must approve the plan before execution"
+    ],
+    "answer": 0,
+    "why": "SQL is <strong>declarative</strong> &mdash; it says <em>what</em>, not <em>how</em>. Since many equivalent plans exist, something has to choose, and the optimizer picks the lowest estimated cost."
+  },
+  {
+    "stem": "In the City / Country example, why is the na&iuml;ve plan wasteful?",
+    "options": [
+      "It returns the wrong rows",
+      "It builds a 2,000,000-tuple Cartesian product before filtering almost all of it away",
+      "It cannot use the NATURAL JOIN syntax",
+      "It projects city_name too early"
+    ],
+    "answer": 1,
+    "why": "The plan is <strong>correct but expensive.</strong> 200 countries &times; 10,000 cities is a two-million-row intermediate table, built only to be discarded by the filters that follow."
+  },
+  {
+    "stem": "Which of the following is NOT a good optimization heuristic?",
+    "options": [
+      "Perform selection early",
+      "Avoid useless attributes",
+      "Defer filtering until the end",
+      "Perform most restrictive joins first"
+    ],
+    "answer": 2,
+    "why": "<strong>Deferring filtering</strong> is the opposite of the rule. Filtering early is what keeps intermediate results small, which is where the savings come from."
+  },
+  {
+    "stem": "Which of these does the optimizer use to estimate the cost of a plan?",
+    "options": [
+      "Catalog statistics: table sizes, value distributions, and available indexes",
+      "The execution time of every candidate plan, measured in advance",
+      "The order in which the user wrote the clauses",
+      "The number of characters in the query"
+    ],
+    "answer": 0,
+    "why": "It uses <strong>catalog statistics</strong> &mdash; table size and tuple counts, the selectivity of conditions, and which indexes and constraints exist. Actually running every plan to time it would cost more than the query itself."
+  },
+  {
+    "stem": "A query that ran quickly last month is now slow, although the SQL and the indexes are unchanged. What is a likely cause covered in this lesson?",
+    "options": [
+      "The parser has to rebuild the parse tree each time",
+      "SQL became less declarative as the table grew",
+      "Outdated catalog statistics are misleading the optimizer into a bad plan",
+      "EXPLAIN QUERY PLAN was never run on it"
+    ],
+    "answer": 2,
+    "why": "<strong>Outdated statistics</strong> can make the optimizer choose a plan that scans far more rows than necessary. In PostgreSQL, <code>ANALYZE</code> refreshes distinct value counts and column histograms."
+  },
+  {
+    "stem": "Why does SELECT * FROM orders WHERE YEAR(order_date)=2025; prevent index use, while the BETWEEN version does not?",
+    "options": [
+      "BETWEEN is always faster than equality",
+      "The index stores raw order_date values, so a condition on a value computed from them cannot be matched against it",
+      "YEAR() is not valid SQL",
+      "Indexes only work on text columns"
+    ],
+    "answer": 1,
+    "why": "The index knows the stored <code>order_date</code> values, not <code>YEAR(order_date)</code>. Wrapping an indexed column in a function hides it from the index; rewriting the condition as a range over the raw column puts the index back in play."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

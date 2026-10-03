@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 8 &middot; Storage, Indexing, and Recovery &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic8">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 8</p>
+  <h1>Storage, Indexing,<br>and Recovery</h1>
+  <p class="hero__lede">Underneath every query is a disk that is slow and a memory that forgets. Indexes buy back the speed; logs, checkpoints, and backups buy back the certainty &mdash; and each one is paid for somewhere else.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>13</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic8</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#tiers" class="rail__link"><span>02</span> Storage Tiers &amp; I/O Costs</a></li>
+      <li><a href="#indexing" class="rail__link"><span>03</span> Indexing Fundamentals</a></li>
+      <li><a href="#btrees" class="rail__link"><span>04</span> B-trees</a></li>
+      <li><a href="#hash" class="rail__link"><span>05</span> Hash Indexes</a></li>
+      <li><a href="#upkeep" class="rail__link"><span>06</span> Index Maintenance Costs</a></li>
+      <li><a href="#strategies" class="rail__link"><span>07</span> Practical Strategies</a></li>
+      <li><a href="#recovery" class="rail__link"><span>08</span> Recovery Fundamentals</a></li>
+      <li><a href="#undoredo" class="rail__link"><span>09</span> Undo / Redo Strategies</a></li>
+      <li><a href="#crash" class="rail__link"><span>10</span> Crash Scenarios</a></li>
+      <li><a href="#checklists" class="rail__link"><span>11</span> Checklists</a></li>
+      <li><a href="#activity" class="rail__link"><span>12</span> Activity</a></li>
+      <li><a href="#reflection" class="rail__link"><span>13</span> Reflection &amp; Reading</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 INTRODUCTION ============ -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>This lesson explores how a DBMS manages data storage, uses indexing structures to speed up queries, and maintains reliability through recovery mechanisms such as backups, logging, and undo/redo processes.</p>
+          <p>Topic 7 ended with a promise: an <strong>index</strong> works like the index of a book, letting the database find rows without reading every page. This lesson opens that up &mdash; what an index actually is, what it costs, and what happens to all of it when the machine loses power mid-write.</p>
+
+          <h3 class="sub">Learning objectives</h3>
+          <ul class="list">
+            <li>Describe the differences between storage tiers &mdash; RAM, SSD, HDD, tape &mdash; and why they matter;</li>
+            <li>Explain how indexes work, and distinguish between B-tree, hash, and composite indexes;</li>
+            <li>Evaluate trade-offs between read performance and write costs when using indexes;</li>
+            <li>Understand database logging, checkpoints, and undo/redo recovery strategies; and</li>
+            <li>Walk through a simple crash recovery example using log entries.</li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>I/O latency is the bottleneck</li>
+            <li>B-tree ranges, hash equality</li>
+            <li>Leftmost-prefix rule</li>
+            <li>Reads gain, writes pay</li>
+            <li>UNDO, REDO, checkpoint</li>
+          </ul>
+        </aside>
+      </div>
+      <p class="callout callout--note">Three ideas carry the whole lesson: <strong>storage and indexing choices directly impact database speed</strong>; <strong>indexes accelerate reads but add overhead to writes</strong>; and <strong>recovery mechanisms enforce the ACID guarantees</strong>, durability above all.</p>
+    </section>
+
+    <!-- ============ 02 STORAGE TIERS ============ -->
+    <section id="tiers" class="section">
+      <p class="section__num">02</p>
+      <h2>Storage Tiers, Costs, and DBMS Buffers</h2>
+      <p>A DBMS interacts with multiple layers of storage, each with different speeds, costs, and durability. Understanding these tiers is essential for understanding query performance.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Tier</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Character</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Where it is used</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>RAM</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Extremely fast, but <em>volatile</em></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Buffers and caches &mdash; everything the database wants close at hand</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>SSD</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Fast, durable flash storage</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Common in production systems</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>HDD</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Slower, because parts physically move</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Bulk storage where capacity matters more than latency</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Magnetic tape</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Slow, but extremely cheap per GB</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Archival backups</td>
+</tr>
+</tbody></table></div>
+
+      <h3 class="sub">Why tiers matter</h3>
+      <p>Most database operations are slowed down by <mark>I/O latency</mark>. A system that can retrieve more data from RAM, and rely less on disk, will perform better. That single sentence explains nearly every design decision in this lesson.</p>
+
+      <h3 class="sub">Key I/O costs</h3>
+      <p class="hint">Tap each cost to see where the time goes.</p>
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Seek</b> time</span>
+          <span class="quad__short">moving the head to the right track</span>
+          <span class="quad__long">On an HDD, a physical arm swings across the platter. This is mechanical movement measured in milliseconds &mdash; an eternity next to RAM, and the reason random access on spinning disks is so punishing.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Rotational</b> latency</span>
+          <span class="quad__short">waiting for the disk to spin into position</span>
+          <span class="quad__long">Even once the head is over the right track, the data has to come around under it. On average you wait half a revolution for whatever you asked for.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Transfer</b> time</span>
+          <span class="quad__short">actually reading the bytes</span>
+          <span class="quad__long">The time to stream the data off the device once it is found. Usually the smallest of the three on an HDD, which is why reading a little and reading a lot can cost nearly the same.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Sequential</b> vs random</span>
+          <span class="quad__short">order of access changes everything</span>
+          <span class="quad__long">Sequential reads are far more efficient: seek and rotation are paid once, then the data streams. Random reads pay both costs over and over. This gap is why a full table scan can beat an index when a query returns most of the table.</span>
+        </button>
+      </div>
+
+      <h3 class="sub">The DBMS buffer manager</h3>
+      <p>The <strong>buffer pool</strong> caches pages in RAM. When a query needs data, the database first checks the buffer, which is quick. If the page is absent, it loads it from disk, which is slow.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Access path</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What it reads</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Best for</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Table scan</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Pages read sequentially, start to finish</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Large outputs &mdash; when you want most of the table anyway</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Index lookup</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">A few index pages, then one data page</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Selective queries &mdash; when you want a handful of rows</td>
+</tr>
+</tbody></table></div>
+      <p class="callout callout--warn">Note what the second row implies: an index lookup is efficient <em>only for selective queries.</em> Ask for most of the table through an index and you pay a random read per row &mdash; worse than simply scanning.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Caching, sequential access, and selectivity are the three levers; the number of columns is not one of them."
+           data-no="Not quite. Buffer pools, sequential reads, and selective lookups all reduce I/O cost. The width of the table is a different concern.">
+        <p class="activity__prompt">Which of these reduce the <strong>I/O cost</strong> of answering a query?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">Finding the page already cached in the buffer pool</button>
+          <button class="chip" type="button" data-correct="true">Reading pages sequentially rather than at random</button>
+          <button class="chip" type="button">Adding more columns to the table</button>
+          <button class="chip" type="button" data-correct="true">Using an index when the filter matches only a few rows</button>
+          <button class="chip" type="button">Using an index when the filter matches almost every row</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+      <p class="callout callout--note"><strong>Reflection:</strong> think of an application you use that searches through a lot of data &mdash; a chat app, email, a messaging client. How would its performance change if it could not cache anything in memory?</p>
+    </section>
+
+    <!-- ============ 03 INDEXING FUNDAMENTALS ============ -->
+    <section id="indexing" class="section">
+      <p class="section__num">03</p>
+      <h2>Indexing Fundamentals</h2>
+      <div class="definition">
+        <p class="definition__tag">Index</p>
+        <p>A data structure that allows a DBMS to <mark>locate rows quickly without scanning the entire table.</mark> Indexes improve read performance but add overhead to writes, so choosing which columns to index matters.</p>
+      </div>
+
+      <h3 class="sub">Types of index</h3>
+      <p class="hint">Tap each type to see what it is good at.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">B-tree index</span>
+          <span class="card__sub">the default almost everywhere</span>
+          <span class="card__data">Ordered, balanced trees. Because the keys stay sorted, they support both equality and <em>range</em> queries &mdash; and sorting, and prefix matches.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Hash index</span>
+          <span class="card__sub">equality only</span>
+          <span class="card__data">Fast equality lookups by jumping straight to a bucket. No ordering is kept, so range queries are impossible.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Composite index</span>
+          <span class="card__sub">several columns, in order</span>
+          <span class="card__data">A multi-column index. It follows the <em>leftmost-prefix rule</em>: a query can use it only if it filters on the first column, then the second, and so on.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Clustered index</span>
+          <span class="card__sub">the table&rsquo;s own order</span>
+          <span class="card__data">Determines the physical order of the table&rsquo;s rows on disk. A table can have only one, since rows can only be laid out one way.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Covering index</span>
+          <span class="card__sub">the answer is in the index</span>
+          <span class="card__data">Contains every column a query needs, so the DBMS never has to open the table at all. The index <em>is</em> the result.</span>
+        </button>
+      </div>
+
+      <h3 class="sub">When to index, and when not to</h3>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Index it when&hellip;</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Leave it alone when&hellip;</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">The column is frequently filtered in <code>WHERE</code> clauses</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The table is small &mdash; the overhead outweighs the benefit</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">The column is used in <code>JOIN</code> conditions</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The column has low cardinality, unless it is part of a composite key</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">The column has high cardinality &mdash; many distinct values</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The column is frequently updated in a write-heavy workload</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">The table is large enough that full scans are expensive</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">&mdash;</td>
+</tr>
+</tbody></table></div>
+
+      <h3 class="sub">Creating indexes</h3>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">-- Index on a single column
+CREATE INDEX idx_orders_customer
+ON orders(customer_id);
+
+-- Composite index
+CREATE INDEX idx_orders_customer_date
+ON orders(customer_id, order_date);</pre>
+      <p class="callout callout--warn">Indexes accelerate searches but cost storage and maintenance, and composite indexes depend on column order. <strong>Too many indexes slow down inserts, updates, and deletes.</strong></p>
+      <p class="callout callout--note"><strong>Reflection:</strong> think of a query you often write. Which column would benefit from indexing, and why?</p>
+    </section>
+
+    <!-- ============ 04 B-TREES ============ -->
+    <section id="btrees" class="section">
+      <p class="section__num">04</p>
+      <h2>B-trees</h2>
+      <p>B-tree and B+ tree structures are the default indexing method in relational databases. They maintain sorted order, keep the tree height shallow, and support efficient equality and range lookups.</p>
+
+      <h3 class="sub">The basics</h3>
+      <ul class="list">
+        <li>Nodes store keys in <strong>sorted order.</strong></li>
+        <li>Tree height stays small even for millions of keys.</li>
+        <li>Leaves contain the actual key&ndash;pointer pairs (in a B+ tree).</li>
+      </ul>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">b+ tree, searching for 70</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">            [ 50 ]
+           /      \
+  [10 20 30]    [60 70 80 90]
+     leaf            leaf
+
+Search example:
+1. Compare key with 50 &rarr; go right.
+2. Search leaf page containing 60&ndash;90.</pre>
+      <p>That shallowness is the whole trick. Each level you descend is one page read, so a tree three or four levels deep finds any row among millions in three or four reads &mdash; however the table grows.</p>
+
+      <h3 class="sub">Range query support</h3>
+      <p>Because leaf pages are linked in sorted order, B-trees allow efficient scanning of keys within a range &mdash; <code>price BETWEEN 100 AND 200</code>. Find the first qualifying key, then walk the leaves sideways until you pass the upper bound.</p>
+      <p class="callout callout--note">B-trees are ideal for prefix matches and range queries; hash indexes cannot support ranges at all. Most relational systems rely heavily on B-tree variants for exactly this reason.</p>
+      <p class="callout callout--warn"><strong>Reflection:</strong> why do you think B-trees scale so well to extremely large databases? Consider what happens to the height of the tree when the number of keys doubles.</p>
+    </section>
+
+    <!-- ============ 05 HASH INDEXES ============ -->
+    <section id="hash" class="section">
+      <p class="section__num">05</p>
+      <h2>Hash Indexes</h2>
+      <p>Hash indexes use a hash function to map key values to buckets. They are extremely efficient for equality lookups, but they do not preserve ordering.</p>
+
+      <h3 class="sub">How they work</h3>
+      <ul class="list">
+        <li>A hash function converts the search key into a <strong>bucket address.</strong></li>
+        <li>All keys that hash to the same bucket are stored together.</li>
+        <li>Equality queries resolve quickly by jumping directly to the bucket.</li>
+      </ul>
+
+      <h3 class="sub">Limitations</h3>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">no ordering</p>
+          <h3>Ranges are impossible</h3>
+          <p>A hash deliberately scatters nearby values into unrelated buckets. Nothing about the structure says which key comes next, so <code>BETWEEN</code>, <code>&lt;</code>, sorting, and prefix matches are all out.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">distribution</p>
+          <h3>Performance depends on spread</h3>
+          <p>If values distribute unevenly across buckets, one bucket grows long and lookups against it degrade. And some systems restrict hash indexes to in-memory structures.</p>
+        </article>
+      </div>
+      <p class="callout callout--warn">Use hash indexes <strong>only</strong> when filtering on equality conditions. B-tree indexes are more flexible and more widely supported &mdash; which is why they are almost always the right default.</p>
+    </section>
+
+    <!-- ============ 06 INDEX MAINTENANCE COSTS ============ -->
+    <section id="upkeep" class="section">
+      <p class="section__num">06</p>
+      <h2>Index Maintenance Costs</h2>
+      <p>Indexes accelerate reads but introduce overhead during writes. Every time a row is inserted, updated, or deleted, every relevant index must also be updated.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Cost</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What it means</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Storage</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Each index requires additional disk space of its own.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Write</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Inserts, updates, and deletes must all modify every relevant index.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>CPU</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">B-tree maintenance &mdash; node splits and merges &mdash; can be expensive.</td>
+</tr>
+</tbody></table></div>
+      <p>Put concretely: a table with <strong>no indexes</strong> writes rows directly and efficiently. A table with <strong>three or more indexes</strong> must update each one on every insert &mdash; which dramatically slows batch insertion.</p>
+      <p class="callout callout--note">This is the trade-off at the centre of the whole topic. An index is not free speed; it is read speed bought with write speed, disk space, and CPU. The question is never &ldquo;is this index fast?&rdquo; but &ldquo;is it worth what it costs?&rdquo;</p>
+    </section>
+
+    <!-- ============ 07 PRACTICAL STRATEGIES ============ -->
+    <section id="strategies" class="section">
+      <p class="section__num">07</p>
+      <h2>Practical Indexing Strategies</h2>
+      <ul class="list">
+        <li>Index only the columns that <strong>significantly</strong> improve query performance.</li>
+        <li>Use <strong>covering indexes</strong> when a query can be satisfied directly from the index.</li>
+        <li>Monitor unused indexes and remove them to reduce overhead.</li>
+        <li>For bulk loads, <strong>drop the indexes first, load the data, then recreate them</strong> &mdash; one rebuild beats thousands of incremental updates.</li>
+      </ul>
+
+      <h3 class="sub">Example &middot; a covering index</h3>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT customer_id, total_amount
+FROM orders
+WHERE customer_id = ?;</pre>
+      <p>If an index exists on <code>(customer_id, total_amount)</code>, the DBMS can return results using <strong>only the index</strong> &mdash; there is no need to touch the table pages at all. Both columns the query asks for are already sitting in the index, in the order it needs them.</p>
+      <p class="callout callout--warn">Indexes must be chosen to balance read speed against write cost. <strong>Write-heavy workloads generally need fewer indexes.</strong> Index monitoring tools can help identify unused or redundant ones.</p>
+    </section>
+
+    <!-- ============ 08 RECOVERY FUNDAMENTALS ============ -->
+    <section id="recovery" class="section">
+      <p class="section__num">08</p>
+      <h2>Recovery Fundamentals</h2>
+      <p>Recovery mechanisms ensure that a database remains consistent even when failures occur. They uphold the ACID properties &mdash; <strong>atomicity</strong> and <strong>durability</strong> above all.</p>
+      <p class="hint">Three mechanisms, each covering what the others cannot.</p>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Backups</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Copies of the database at a point in time, used for restoring data after media failure. They should be <strong>tested regularly</strong> to confirm they are usable &mdash; an untested backup is a hope, not a plan.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Transaction logs</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A record of every change the database intends to make, written before the change itself. The log is used to <strong>redo</strong> committed transactions and to <strong>undo</strong> incomplete ones.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Checkpoints</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>The database writes its dirty pages to disk and records a checkpoint marking a known consistent state. This <strong>reduces how much log the system must scan</strong> during recovery &mdash; it need not look back past the last checkpoint.</p></div>
+        </div>
+      </div>
+      <p class="callout callout--note">Backups protect against physical storage loss. Logs let the database replay or reverse changes. Checkpoints bound how far back the system has to look. Lose any one of the three and some class of failure becomes unrecoverable.</p>
+    </section>
+
+    <!-- ============ 09 UNDO / REDO ============ -->
+    <section id="undoredo" class="section">
+      <p class="section__num">09</p>
+      <h2>Undo / Redo Strategies</h2>
+      <p>Recovery methods differ depending on whether the DBMS writes changes to disk <em>before</em> or <em>after</em> a transaction commits. That one decision determines what the system has to clean up after a crash.</p>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">no-undo / redo</p>
+          <h3>Deferred update</h3>
+          <p>Changes are kept in memory until commit, so <strong>no uncommitted change ever reaches disk.</strong> On crash, only REDO is required &mdash; there is nothing on disk that should not be there.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">undo / redo</p>
+          <h3>Immediate update</h3>
+          <p>Changes may be written to disk before commit, so the log must include both <strong>old and new values.</strong> On crash: undo the incomplete transactions, then redo the committed ones.</p>
+        </article>
+      </div>
+
+      <h3 class="sub">Example &middot; crash recovery</h3>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">log</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">L1: START T1
+L2: WRITE T1: X &lt;- 10 (old = 5)
+L3: START T2
+L4: WRITE T2: Y &lt;- 20 (old = 0)
+L5: COMMIT T1
+CRASH
+
+Recovery:
+- Undo T2 &rarr; restore Y = 0
+- Redo T1 &rarr; ensure X = 10 on disk</pre>
+      <p>T1 committed, so its effect must survive &mdash; redo it to be sure <code>X = 10</code> reached the disk. T2 never committed, so its effect must vanish &mdash; undo it using the old value the log recorded, restoring <code>Y = 0</code>. That is exactly why an immediate-update log stores the old value alongside the new one.</p>
+      <p class="callout callout--warn">Logs must contain enough information to undo or redo operations correctly. Deferred update never needs UNDO, because uncommitted writes never reach disk; immediate update requires both.</p>
+      <p class="callout callout--note"><strong>Reflection:</strong> which method would be safer if the system crashes frequently? Which would be faster under normal operation? Notice that the answer is not the same for both questions.</p>
+    </section>
+
+    <!-- ============ 10 CRASH SCENARIOS ============ -->
+    <section id="crash" class="section">
+      <p class="section__num">10</p>
+      <h2>Crash Scenarios and Recovery Workflow</h2>
+      <p>Different types of failure require different recovery actions. Understanding how recovery uses logs and checkpoints explains how a DBMS restores consistency.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Failure</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What survived</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What recovery needs</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Soft crash</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The disk is intact; the DBMS process stopped unexpectedly</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The log &mdash; undo the uncommitted, redo the committed</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Media crash</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Nothing on that device; the storage itself failed</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The latest backup, plus every log entry written since it was taken</td>
+</tr>
+</tbody></table></div>
+
+      <h3 class="sub">Soft crash recovery</h3>
+      <ul class="list">
+        <li>Use the logs to identify which transactions committed.</li>
+        <li>Undo the uncommitted operations.</li>
+        <li>Redo the committed operations not yet written to disk.</li>
+      </ul>
+
+      <h3 class="sub">Media crash recovery</h3>
+      <ul class="list">
+        <li>Restore from the latest backup.</li>
+        <li>Replay the logs (REDO) from the backup point to the moment before the crash.</li>
+      </ul>
+
+      <h3 class="sub">Example &middot; log replay timeline</h3>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">media crash</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">T0 (backup) ---- L1 ---- L2 ---- L3 ---- Crash
+
+Recovery steps:
+1. Restore backup taken at T0.
+2. REDO log entries L1, L2, L3.
+3. Database is restored to state at crash time.</pre>
+      <p class="callout callout--warn">Notice what this timeline demands: the logs have to survive the failure that destroyed the data. A backup and its logs stored on the same failed disk recover nothing &mdash; which is why log storage is kept separate, and why logs must not be deleted prematurely.</p>
+      <p class="callout callout--note">Soft crashes require UNDO and REDO based on commit status. Media failures require restoring a backup and replaying logs. <strong>Frequent checkpoints reduce how much log must be read</strong> during recovery.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. A soft crash leaves the disk intact, so the log alone is enough; a media crash destroys the data and needs the backup restored first."
+           data-no="Not quite. The difference is whether the stored data survived. If the disk is intact, logs alone suffice; if it is gone, you must restore a backup before replaying anything.">
+        <p class="activity__prompt">A storage device has failed and its data is lost. Which steps does recovery require?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">Restore from the latest backup</button>
+          <button class="chip" type="button" data-correct="true">Replay the log forward from the backup point</button>
+          <button class="chip" type="button">Nothing &mdash; checkpoints alone restore the data</button>
+          <button class="chip" type="button" data-correct="true">Have kept the logs somewhere the failure did not reach</button>
+          <button class="chip" type="button">Rebuild every index before anything else</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 11 CHECKLISTS ============ -->
+    <section id="checklists" class="section">
+      <p class="section__num">11</p>
+      <h2>Checklists</h2>
+      <p>Everything above, reduced to what you would actually check when designing or operating a database.</p>
+      <div class="types">
+        <article class="type type--focus">
+          <p class="type__tag">index design</p>
+          <h3>Before adding an index</h3>
+          <p>Index the columns used frequently in filtering or joining. Use composite indexes when several columns are queried together. Drop unused or redundant indexes to save space and write cost. Balance read performance against write cost every time.</p>
+        </article>
+        <article class="type">
+          <p class="type__tag">recovery</p>
+          <h3>Before you need it</h3>
+          <p>Maintain regular full backups. Ensure logs are stored safely and not deleted prematurely. Configure checkpoints to reduce recovery time. Test backup and restore procedures regularly &mdash; a restore first attempted during an outage is not a procedure.</p>
+        </article>
+      </div>
+      <p class="callout callout--note">The two lists pull in opposite directions on purpose. Indexing is about making the common case fast; recovery is about making the rare case survivable. A database that is only tuned for one of them will eventually disappoint you in the other.</p>
+    </section>
+
+    <!-- ============ 12 ACTIVITY ============ -->
+    <section id="activity" class="section">
+      <p class="section__num">12</p>
+      <h2>Activity: Watching Indexes Work</h2>
+      <p>A hands-on demonstration of how indexes change what the query planner does. Use the SQLite playground &mdash; <a href="https://db-book.com/university-lab-dir/sqljs.html">Execute SQL Online</a> &mdash; or your own local SQLite. Open it and clear any existing tables before you begin.</p>
+
+      <h3 class="sub">Step 1 &middot; Set up the data</h3>
+      <p>Copy and run the setup below. The dataset is deliberately large &mdash; 500 products and 10,000 sales &mdash; so that indexing effects are actually visible.</p>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">step 1 &middot; ddl + sample data</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">CREATE TABLE Product(
+    product_id INTEGER PRIMARY KEY,
+    product_name TEXT,
+    category TEXT,
+    price INTEGER
+);
+
+-- Insert 500 products
+WITH RECURSIVE c1(i) AS (
+    SELECT 1 UNION ALL SELECT i+1 FROM c1 WHERE i &lt;= 500)
+INSERT INTO Product
+SELECT
+    i,
+    'Item ' || i,
+    CASE
+        WHEN i % 3 = 0 THEN 'Electronics'
+        WHEN i % 3 = 1 THEN 'Clothing'
+        ELSE 'Sports'
+    END,
+    (i % 100) * 100
+FROM c1;
+
+CREATE TABLE Sales(
+    sale_id INTEGER PRIMARY KEY,
+    product_id INTEGER,
+    quantity INTEGER,
+    FOREIGN KEY(product_id) REFERENCES Product(product_id)
+);
+
+-- Insert 10,000 sales records
+WITH RECURSIVE c2(x) AS (
+    SELECT 1 UNION ALL SELECT x+1 FROM c2 WHERE x &lt; 10000)
+INSERT INTO Sales
+SELECT
+    x,
+    (x % 500) + 1,   -- spreads sales across many product_ids
+    (x % 5) + 1
+FROM c2;</pre>
+
+      <h3 class="sub">Step 2 &middot; Filter without an index</h3>
+      <p>Start with a selective filter and see how SQLite behaves.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT *
+FROM Product
+WHERE category = 'Electronics'
+  AND price &gt; 8000;</pre>
+      <p>Now check how SQLite executes it:</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">EXPLAIN QUERY PLAN
+SELECT *
+FROM Product
+WHERE category = 'Electronics'
+  AND price &gt; 8000;</pre>
+      <p class="hint">At this point you should still see <strong>SCAN TABLE Product</strong>.</p>
+
+      <h3 class="sub">Step 3 &middot; Add an index and rerun</h3>
+      <p>Write the <code>CREATE INDEX</code> statement yourself first &mdash; on the two columns the filter uses. Then compare.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Show / hide the index</span>
+          <span class="card__sub">two columns, filter order</span>
+          <span class="card__data" style="white-space:pre;">CREATE INDEX idx_product_category_price
+ON Product(category, price);</span>
+        </button>
+      </div>
+      <p>After creating it, run the <code>EXPLAIN QUERY PLAN</code> again.</p>
+      <p class="hint">Look for: <strong>SEARCH TABLE Product USING INDEX idx_product_category_price</strong>.</p>
+
+      <h3 class="sub">Step 4 &middot; Test a low-selectivity filter</h3>
+      <p>Even with indexes, poorly selective columns may still cause table scans.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">EXPLAIN QUERY PLAN
+SELECT *
+FROM Product
+WHERE price &lt;= 9000;</pre>
+      <p class="hint">You may still see <strong>SCAN TABLE Product</strong> &mdash; <code>price &lt;= 9000</code> matches most of the table, so an index would cost more than it saves. The optimizer is not ignoring your index; it is declining it.</p>
+
+      <h3 class="sub">Step 5 &middot; A composite index, matched by the query</h3>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Show / hide the composite index</span>
+          <span class="card__sub">leftmost column first</span>
+          <span class="card__data" style="white-space:pre;">CREATE INDEX idx_cat_price
+ON Product(category, price);</span>
+        </button>
+      </div>
+      <p>Then run a query whose conditions match the index&rsquo;s column order:</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">EXPLAIN QUERY PLAN
+SELECT *
+FROM Product
+WHERE category = 'Electronics'
+  AND price &gt; 9000;</pre>
+
+      <h3 class="sub">Step 6 &middot; The join test</h3>
+      <p>With 10,000 sales rows, the effect on a join is dramatic. First, the plan without a join index:</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">EXPLAIN QUERY PLAN
+SELECT product_name, quantity
+FROM Product JOIN Sales USING(product_id)
+WHERE category = 'Electronics';</pre>
+      <p>Now add an index on the join key and run it again.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Show / hide the join index</span>
+          <span class="card__sub">on the foreign key</span>
+          <span class="card__data" style="white-space:pre;">CREATE INDEX idx_sales_product
+ON Sales(product_id);</span>
+        </button>
+      </div>
+      <p class="hint">Look for: <strong>SEARCH TABLE Sales USING INDEX idx_sales_product</strong>.</p>
+
+      <h3 class="sub">Step 7 &middot; Transaction and rollback</h3>
+      <p>Finally, a small demonstration of the recovery half of this lesson.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">BEGIN TRANSACTION;
+UPDATE Product SET price = price + 500 WHERE product_id = 10;
+SELECT price FROM Product WHERE product_id = 10;
+ROLLBACK;
+SELECT price FROM Product WHERE product_id = 10;</pre>
+      <p>The first <code>SELECT</code> shows the new price; the second, after the rollback, shows the original. The update was real inside the transaction and gone outside it &mdash; atomicity, in four statements.</p>
+
+      <p class="callout callout--note">What the activity demonstrates: index usage becomes clear when the table is large and the filter is selective; composite indexes work only when queries match their leftmost columns; joins on large tables improve dramatically with proper indexing; SQLite may still choose a table scan for low-selectivity columns; and transactions show how rollback protects consistency.</p>
+    </section>
+
+    <!-- ============ 13 REFLECTION & READING ============ -->
+    <section id="reflection" class="section">
+      <p class="section__num">13</p>
+      <h2>Reflection Questions &amp; Further Reading</h2>
+      <p class="hint">Work out your own answer first, then tap to compare your thinking.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">What if an app could cache nothing in memory?</span>
+          <span class="card__sub">storage tiers</span>
+          <span class="card__data">Think about how many times the same few pages get read in a chat or mail client, and what each of those reads would cost if every one went to disk. Then consider which operations would degrade worst &mdash; opening a recent thread, or searching the whole archive.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Which column in your own queries deserves an index?</span>
+          <span class="card__sub">indexing</span>
+          <span class="card__data">Check it against the four conditions: is it filtered in WHERE, used in a JOIN, high in cardinality, and on a table big enough that scanning hurts? If a column fails the cardinality test, consider whether it belongs in a composite index instead.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Why do B-trees scale so well?</span>
+          <span class="card__sub">b-trees</span>
+          <span class="card__data">Work out what happens to the height of the tree when the number of keys doubles, and compare that with what happens to the number of rows a scan must read. One grows by a level only occasionally; the other grows every time.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Safer under frequent crashes, or faster in normal operation?</span>
+          <span class="card__sub">undo / redo</span>
+          <span class="card__data">Separate the two questions. For safety, ask which method can leave uncommitted data on disk. For speed, ask which one holds changes in memory until commit, and what that costs for a long transaction writing a great deal of data.</span>
+        </button>
+      </div>
+
+      <h3 class="sub">Further reading</h3>
+      <ul class="list">
+        <li><em>CMSC 206 Lesson Slides:</em> Storage, Indexing, and Recovery.</li>
+        <li>Silberschatz, Korth, and Sudarshan, <em>Database System Concepts</em> &mdash; the indexing and recovery chapters.</li>
+        <li>PostgreSQL documentation: <a href="https://www.postgresql.org/docs/current/indexes.html">Indexes</a> and <a href="https://www.postgresql.org/docs/current/wal-intro.html">Write-Ahead Logging (WAL)</a>.</li>
+        <li>SQLite documentation: <a href="https://sqlite.org/queryplanner.html">Query Planner</a> and <a href="https://sqlite.org/lang_transaction.html">Transactions</a>.</li>
+      </ul>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li>A DBMS spans storage tiers &mdash; <strong>RAM, SSD, HDD, tape</strong> &mdash; trading speed against cost and durability. Most operations are limited by <strong>I/O latency.</strong></li>
+        <li>I/O cost is seek time, rotational latency, and transfer time; <strong>sequential reads are far more efficient than random ones.</strong></li>
+        <li>The <strong>buffer pool</strong> caches pages in RAM, so a query that finds its page there avoids the disk entirely.</li>
+        <li>An <strong>index</strong> locates rows without scanning the table. B-trees handle equality and ranges; hash indexes handle equality only; composite indexes follow the <strong>leftmost-prefix rule</strong>; clustered indexes set physical row order; covering indexes answer a query by themselves.</li>
+        <li>Index a column that is frequently filtered or joined, has <strong>high cardinality</strong>, and sits in a table large enough that scans are expensive. Avoid indexing small tables, low-cardinality columns, and heavily updated columns.</li>
+        <li>Indexes cost <strong>storage, write time, and CPU.</strong> Every insert, update, and delete must maintain every relevant index &mdash; so write-heavy workloads want fewer of them.</li>
+        <li><strong>Recovery</strong> rests on three mechanisms: backups against media loss, transaction logs to redo and undo changes, and checkpoints to bound how far back recovery must read.</li>
+        <li><strong>Deferred update (NO-UNDO / REDO)</strong> keeps changes in memory until commit, so only REDO is needed. <strong>Immediate update (UNDO / REDO)</strong> may write before commit, so the log stores old and new values and recovery does both.</li>
+        <li>A <strong>soft crash</strong> leaves the disk intact: undo the uncommitted, redo the committed. A <strong>media crash</strong> destroys the data: restore the latest backup, then replay the log forward to the moment of the crash.</li>
+      </ul>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="Topic7.html">&larr; Topic 7</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <span class="pager__spacer"></span>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Storage, Indexing, and Recovery,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Further reading: Silberschatz, Korth and Sudarshan, <em>Database System Concepts</em>; PostgreSQL and SQLite documentation. Practice environment: db-book.com online SQL playground.</p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "Which storage tier is fast but volatile, and therefore used for buffers and caches?",
+    "options": ["SSD", "RAM", "HDD", "Magnetic tape"],
+    "answer": 1,
+    "why": "<strong>RAM</strong> is extremely fast but loses its contents when power is lost. SSD and HDD are durable; magnetic tape is slow but extremely cheap per GB, which is why it is used for archival backups."
+  },
+  {
+    "stem": "Why are sequential reads so much more efficient than random reads?",
+    "options": [
+      "Sequential reads transfer fewer bytes in total",
+      "Seek time and rotational latency are paid once, then the data streams",
+      "Random reads cannot use the buffer pool",
+      "Sequential reads bypass the operating system"
+    ],
+    "answer": 1,
+    "why": "A random read pays <strong>seek time</strong> and <strong>rotational latency</strong> for every access. A sequential read pays them once and then streams &mdash; which is why a full table scan can beat an index when a query returns most of the table."
+  },
+  {
+    "stem": "A query filters on a column whose value matches roughly 90% of the rows. What will a good optimizer most likely do?",
+    "options": [
+      "Use the index, since any index is faster than a scan",
+      "Scan the table, since an index lookup per row would cost more",
+      "Refuse to run the query until an index is created",
+      "Build a temporary hash index first"
+    ],
+    "answer": 1,
+    "why": "Index lookups are efficient <strong>only for selective queries.</strong> Fetching 90% of the rows one at a time through an index means a random read each time &mdash; worse than reading the pages sequentially."
+  },
+  {
+    "stem": "Which index type supports range queries such as price BETWEEN 100 AND 200?",
+    "options": ["Hash index", "B-tree index", "Neither &mdash; ranges always require a full scan", "Both equally well"],
+    "answer": 1,
+    "why": "<strong>B-trees</strong> keep keys in sorted order with linked leaf pages, so a range is found once and then walked. A <strong>hash index</strong> scatters nearby values into unrelated buckets and preserves no ordering, so it cannot support ranges at all."
+  },
+  {
+    "stem": "An index exists on orders(customer_id, order_date). Which query can use it?",
+    "options": [
+      "WHERE order_date = '2025-01-01'",
+      "WHERE customer_id = 42",
+      "Neither, since composite indexes only work when both columns are given",
+      "Only a query giving both columns, in any order"
+    ],
+    "answer": 1,
+    "why": "Composite indexes follow the <strong>leftmost-prefix rule.</strong> A query filtering on <code>customer_id</code> can use the index; one filtering only on <code>order_date</code> cannot, because it skips the leading column."
+  },
+  {
+    "stem": "A query reads SELECT customer_id, total_amount FROM orders WHERE customer_id = ?, and an index exists on (customer_id, total_amount). What makes this a covering index?",
+    "options": [
+      "It covers every row in the table",
+      "It contains every column the query needs, so the table pages are never read",
+      "It is clustered, so it determines the physical row order",
+      "It covers both reads and writes with no maintenance cost"
+    ],
+    "answer": 1,
+    "why": "A <strong>covering index</strong> contains all the columns a query needs. Here both <code>customer_id</code> and <code>total_amount</code> are in the index, so the DBMS answers from the index alone and never touches the table."
+  },
+  {
+    "stem": "Which of these is the recommended approach for a large bulk data load?",
+    "options": [
+      "Add extra indexes first so the load can find rows faster",
+      "Drop the indexes, load the data, then recreate the indexes",
+      "Load the data one row per transaction",
+      "Disable the transaction log for the duration of the load"
+    ],
+    "answer": 1,
+    "why": "Every insert must update every relevant index, so loading with indexes in place pays that cost thousands of times over. <strong>Dropping and recreating</strong> replaces all of it with a single rebuild at the end."
+  },
+  {
+    "stem": "What is the purpose of a checkpoint?",
+    "options": [
+      "To create a full backup copy of the database",
+      "To write dirty pages to disk and mark a known consistent state, bounding how much log recovery must scan",
+      "To delete old log entries that are no longer needed",
+      "To rebuild all indexes so they match the table"
+    ],
+    "answer": 1,
+    "why": "A <strong>checkpoint</strong> flushes dirty pages and records a consistent point. Recovery need not look back past it, so frequent checkpoints reduce recovery time &mdash; but they are not a backup and do not replace one."
+  },
+  {
+    "stem": "Why does deferred update (NO-UNDO / REDO) never require an UNDO phase?",
+    "options": [
+      "Because it does not write a transaction log",
+      "Because changes stay in memory until commit, so no uncommitted change ever reaches disk",
+      "Because it takes a checkpoint after every write",
+      "Because it only allows one transaction at a time"
+    ],
+    "answer": 1,
+    "why": "Under <strong>deferred update</strong>, changes are held in memory until commit. Nothing uncommitted is ever on disk, so after a crash there is nothing to roll back &mdash; only committed work to redo."
+  },
+  {
+    "stem": "The log reads: START T1; WRITE T1 X &larr; 10 (old = 5); START T2; WRITE T2 Y &larr; 20 (old = 0); COMMIT T1; then the system crashes. What does recovery do?",
+    "options": [
+      "Redo both T1 and T2",
+      "Undo both T1 and T2",
+      "Redo T1 so X = 10, and undo T2 so Y = 0",
+      "Undo T1 so X = 5, and redo T2 so Y = 20"
+    ],
+    "answer": 2,
+    "why": "T1 committed, so its effect must survive: <strong>redo</strong> it to be sure X = 10 reached the disk. T2 never committed, so its effect must vanish: <strong>undo</strong> it with the old value the log recorded, restoring Y = 0."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>

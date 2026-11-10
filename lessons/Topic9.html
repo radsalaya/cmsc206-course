@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Topic 9 &middot; Big Data and Data Analytics &middot; CMSC 206</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;500;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body data-lesson="topic9">
+
+<div class="progress" role="progressbar" aria-label="Lesson progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+  <div class="progress__bar"></div>
+</div>
+
+<div class="topbar">
+  <a class="menu-link" href="../index.html"><span aria-hidden="true">&larr;</span> Menu</a>
+</div>
+
+<header class="hero">
+  <p class="eyebrow">CMSC 206 &middot; Database Management Systems &middot; Topic 9</p>
+  <h1>Big Data and<br>Data Analytics</h1>
+  <p class="hero__lede">Eight topics built one machine&rsquo;s database and taught you to query it well. This one asks what happens when the data outgrows that machine &mdash; and finds that the SQL survives the move almost unchanged.</p>
+  <dl class="hero__meta">
+    <div><dt>Term</dt><dd>1S AY 2025&ndash;2026</dd></div>
+    <div><dt>Sections</dt><dd>12</dd></div>
+    <div><dt>Check</dt><dd>10 items</dd></div>
+  </dl>
+</header>
+
+<div class="shell">
+
+  <nav class="rail" aria-label="Lesson sections">
+    <p class="rail__label">topic9</p>
+    <ol class="rail__list">
+      <li><a href="#intro" class="rail__link"><span>01</span> Introduction</a></li>
+      <li><a href="#whatis" class="rail__link"><span>02</span> What Is Big Data?</a></li>
+      <li><a href="#versus" class="rail__link"><span>03</span> Big Data vs Traditional DBMS</a></li>
+      <li><a href="#architecture" class="rail__link"><span>04</span> A Big Data Architecture</a></li>
+      <li><a href="#tools" class="rail__link"><span>05</span> Tools and Technologies</a></li>
+      <li><a href="#sqlscales" class="rail__link"><span>06</span> How SQL Scales</a></li>
+      <li><a href="#analytics" class="rail__link"><span>07</span> Types of Data Analytics</a></li>
+      <li><a href="#lifecycle" class="rail__link"><span>08</span> The Analytics Lifecycle</a></li>
+      <li><a href="#activity" class="rail__link"><span>09</span> Hands-on Activity</a></li>
+      <li><a href="#casestudy" class="rail__link"><span>10</span> Case Study</a></li>
+      <li><a href="#tradeoffs" class="rail__link"><span>11</span> Skills &amp; Tradeoffs</a></li>
+      <li><a href="#reflection" class="rail__link"><span>12</span> Reflection</a></li>
+      <li><a href="#summary" class="rail__link"><span>&mdash;</span> Summary</a></li>
+      <li><a href="#check" class="rail__link rail__link--check"><span>&#10003;</span> Check Your Understanding</a></li>
+    </ol>
+  </nav>
+
+  <main class="main">
+
+    <!-- ============ 01 INTRODUCTION ============ -->
+    <section id="intro" class="section">
+      <p class="section__num">01</p>
+      <h2>Introduction</h2>
+      <div class="split">
+        <div>
+          <p>This lesson introduces Big Data concepts and shows how data analytics works in practice. You will learn how Big Data differs from traditional DBMS data, and how analysts explore datasets to discover patterns and trends.</p>
+
+          <h3 class="sub">Learning outcomes</h3>
+          <ul class="list">
+            <li>Explain what Big Data means and how it differs from traditional DBMS data &mdash; volume, velocity, variety;</li>
+            <li>Name common Big Data tools and describe when they are appropriate;</li>
+            <li>Compare traditional relational DBMS and Big Data systems, and explain when each is suitable;</li>
+            <li>Apply the data analytics lifecycle to a small scenario and identify the right analytics task for each step;</li>
+            <li>Explore data using SQL, label queries as descriptive or diagnostic, and interpret analytical patterns; and</li>
+            <li>Decide when a traditional relational database is enough, and when a Big Data approach is required.</li>
+          </ul>
+        </div>
+        <aside class="remember">
+          <h3>Points to Remember</h3>
+          <ul>
+            <li>Volume, velocity, variety</li>
+            <li>The SQL does not change</li>
+            <li>Descriptive &rarr; prescriptive</li>
+            <li>ACID vs CAP tradeoffs</li>
+            <li>Right tool for the workload</li>
+          </ul>
+        </aside>
+      </div>
+      <p class="callout callout--note">Keep one sentence in view for the whole lesson: <strong>Big Data does not replace relational databases.</strong> Each system has its strengths, and the real skill is choosing the right tool for the workload.</p>
+    </section>
+
+    <!-- ============ 02 WHAT IS BIG DATA ============ -->
+    <section id="whatis" class="section">
+      <p class="section__num">02</p>
+      <h2>What Is Big Data?</h2>
+      <div class="definition">
+        <p class="definition__tag">Big Data</p>
+        <p>Datasets that are <mark>too large, too fast, or too varied</mark> for a single relational database system to handle efficiently. They often come from logs, IoT sensors, mobile devices, and large-scale user activity.</p>
+      </div>
+      <p>Big Data is commonly described through the <strong>three Vs</strong>. Tap each one to see what it does to a traditional database.</p>
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Volume</b></span>
+          <span class="quad__short">how much there is</span>
+          <span class="quad__long">Data sizes grow from gigabytes to petabytes and beyond. Traditional DBMS tools become slower as size increases &mdash; and eventually the data no longer fits on one machine at all.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Velocity</b></span>
+          <span class="quad__short">how fast it arrives</span>
+          <span class="quad__long">Data may arrive continuously or in real time. Some applications must process each event as soon as it is generated, rather than waiting for a nightly batch.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Variety</b></span>
+          <span class="quad__short">how many shapes it takes</span>
+          <span class="quad__long">Structured tables, JSON logs, images, free text, and more. A single schema may not support all of them well &mdash; and forcing them into one is often the wrong trade.</span>
+        </button>
+      </div>
+      <p class="callout callout--warn"><strong>Key idea:</strong> if one or more of these characteristics apply, a Big Data solution may be more suitable than a traditional relational database. Note the wording &mdash; <em>one or more.</em> A dataset does not have to be enormous to need different tools, if it arrives fast enough or messily enough.</p>
+    </section>
+
+    <!-- ============ 03 BIG DATA VS TRADITIONAL DBMS ============ -->
+    <section id="versus" class="section">
+      <p class="section__num">03</p>
+      <h2>Big Data vs Traditional DBMS</h2>
+      <p>To decide whether a dataset requires Big Data tools, work through three questions in order. A <strong>yes</strong> to any one of them is enough.</p>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Is the dataset too large to store or process efficiently on one machine?</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>This is the <strong>volume</strong> test. It is not about the number that makes a dataset &ldquo;big&rdquo; &mdash; it is about whether a single machine&rsquo;s disk and memory can still hold and scan it in a reasonable time.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Is the data arriving continuously or very quickly?</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>The <strong>velocity</strong> test. A modest dataset that grows by thousands of events per second still overwhelms a design built around periodic inserts.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Does the dataset contain many different formats?</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>The <strong>variety</strong> test. Tables, JSON, images, and free text in one pipeline rarely fit a single relational schema without distortion.</p></div>
+        </div>
+      </div>
+      <p>If you answer yes to any of these, Big Data tools may be appropriate. <strong>If not, a well-indexed relational database is often the best choice</strong> &mdash; which is the whole of Topic 8 doing its job.</p>
+
+      <h3 class="sub">The decision, as a flow</h3>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">decision flow</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">        Start with your data
+                |
+                v
+   Too large for one machine? --- yes --&gt; Big Data tools
+                |
+                no
+                |
+                v
+   Arriving continuously/fast? -- yes --&gt; Big Data tools
+                |
+                no
+                |
+                v
+   Many different formats? ------- yes --&gt; Big Data tools
+                |
+                no
+                |
+                v
+   Relational DBMS (indexing is enough)</pre>
+      <p class="callout callout--note"><strong>Example:</strong> storing a few million sales records is manageable with indexing. Processing millions of event logs per minute from a mobile app is not. The difference is not the word &ldquo;million&rdquo; in both sentences &mdash; it is <em>per minute.</em></p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Any one of the three Vs can be the reason; none of them is about how complicated the SQL looks."
+           data-no="Not quite. The test is volume, velocity, or variety — whether one machine can hold it, keep up with it, or model it.">
+        <p class="activity__prompt">Which of these would genuinely push a workload toward <strong>Big Data tools</strong>?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">The dataset no longer fits on a single machine</button>
+          <button class="chip" type="button" data-correct="true">Events arrive continuously at thousands per second</button>
+          <button class="chip" type="button">The queries involve several joins and a subquery</button>
+          <button class="chip" type="button" data-correct="true">The pipeline carries tables, JSON, images, and free text together</button>
+          <button class="chip" type="button">The table has grown to two million well-indexed rows</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 04 ARCHITECTURE ============ -->
+    <section id="architecture" class="section">
+      <p class="section__num">04</p>
+      <h2>A Big Data Architecture</h2>
+      <p>Big Data systems are built in layers, each solving a different scaling problem. Data arrives, is stored, is processed, and is analyzed &mdash; and each layer hands off to the next.</p>
+      <figure class="figure">
+        <div class="stack">
+          <div class="stack__views">
+            <span class="lvl">Mobile Clients &middot; data sources</span>
+            <span class="lvl">Streaming Layer &middot; Kafka / Pub&#8239;Sub</span>
+            <span class="lvl">Distributed Storage &middot; S3 / HDFS</span>
+            <span class="lvl">Distributed Computing &middot; Spark / Hive</span>
+            <span class="lvl">Analytics Layer &middot; BigQuery / Databricks</span>
+          </div>
+        </div>
+        <figcaption>The layers build on each other: data arrives, is stored, is processed, then is analyzed.</figcaption>
+      </figure>
+
+      <h3 class="sub">Worked example &middot; a ride-hailing app</h3>
+      <p class="hint">Follow one passenger&rsquo;s booking down through the stack. Tap each layer.</p>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Mobile clients &middot; data sources</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>A passenger books a ride. Their phone sends the pickup location, a timestamp, GPS updates throughout the trip, and the payment method. The driver&rsquo;s app sends status updates and GPS data of its own. One ride is already dozens of events.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Streaming layer &middot; Kafka or Pub/Sub</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Every GPS update and app event goes immediately into a streaming system. This layer absorbs <strong>thousands of events per second without losing them</strong> &mdash; which is exactly what a row-at-a-time <code>INSERT</code> into a single database could not do.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Distributed storage &middot; S3 or HDFS</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>All raw trip data &mdash; locations, logs, fares, events &mdash; is stored across many machines, which is what makes it possible to keep months or years of trip history rather than only the recent past.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">Distributed computing &middot; Spark or Hive</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>When an analyst asks for the average trip distance per city, the computing framework breaks the work into smaller tasks and runs them <strong>in parallel</strong>. This keeps queries fast even across billions of rows.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">5</span><span class="acc__title">Analytics layer &middot; BigQuery or Databricks</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Analysts and data scientists write SQL to answer questions: which hours are busiest, whether fares are rising over time, which locations have high cancellation rates. They reach huge datasets without managing any servers themselves.</p></div>
+        </div>
+      </div>
+      <p class="callout callout--warn"><strong>Note:</strong> SQL itself does not change. What changes is <mark>how the system executes your SQL query.</mark> A distributed system spreads the work across many machines so that analytics stay fast even when the data is extremely large.</p>
+    </section>
+
+    <!-- ============ 05 TOOLS ============ -->
+    <section id="tools" class="section">
+      <p class="section__num">05</p>
+      <h2>Tools and Technologies</h2>
+      <p>Big Data systems combine several tools, each handling one part of the problem. Grouped by what they do:</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Job</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Tools</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What it solves</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Storage</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Hadoop Distributed File System (HDFS), Amazon S3</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Keeping more data than one machine&rsquo;s disk can hold</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Batch processing</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Hadoop MapReduce, Apache Spark</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Running a large computation over stored data, in parallel</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Stream processing</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Apache Kafka, Spark Streaming, Apache Flink</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Handling events as they arrive rather than after the fact</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>NoSQL databases</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">MongoDB, Cassandra, Redis, Neo4j</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Storing data whose shape does not suit a fixed relational schema</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Cloud analytics</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Google BigQuery, AWS Athena, Databricks</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Querying huge datasets without running any servers yourself</td>
+</tr>
+</tbody></table></div>
+      <p>The names change every few years; the five jobs do not. When you meet an unfamiliar tool, the useful question is which of these rows it belongs to &mdash; and most of the time, that is enough to understand it.</p>
+      <p class="callout callout--note"><strong>Reminder:</strong> Big Data tools are often needed only when data size or speed exceed what a single machine can handle. Reaching for them earlier buys complexity you do not need.</p>
+    </section>
+
+    <!-- ============ 06 HOW SQL SCALES ============ -->
+    <section id="sqlscales" class="section">
+      <p class="section__num">06</p>
+      <h2>How SQL Scales in Big Data Systems</h2>
+      <p>The SQL you have learned in this course continues to be useful even when data becomes very large. Big Data systems still rely on SQL to express analytical queries. What changes is how the system executes the work.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">In a relational database (SQLite)</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">In a Big Data environment</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">All data and processing happen on <strong>one machine.</strong></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The data is <strong>distributed across many machines.</strong></td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">The query runs as a single plan on that machine.</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The system divides the query into smaller tasks and processes them <strong>in parallel.</strong></td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">Performance is bounded by one machine&rsquo;s disk, memory, and CPU.</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Performance scales by adding machines rather than by buying a bigger one.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;">The SQL syntax you have learned all term.</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">The <strong>same</strong> SQL syntax. What changes is performance and scale, not logic.</td>
+</tr>
+</tbody></table></div>
+      <p>This connects straight back to Topic 7. There, the optimizer chose between a scan and an index on one machine. Here, the planner makes the same kind of decision across a cluster: which machine holds which partition, what can run in parallel, and when results must be brought back together.</p>
+      <p class="callout callout--note">This is why learning SQL well is still valuable. <strong>The same ideas apply whether the data is stored on one machine or across a large distributed system</strong> &mdash; the syntax remains similar, and what changes is performance and scale, not logic.</p>
+    </section>
+
+    <!-- ============ 07 TYPES OF ANALYTICS ============ -->
+    <section id="analytics" class="section">
+      <p class="section__num">07</p>
+      <h2>Types of Data Analytics</h2>
+      <p>Analytics helps us understand data and make decisions. Four types are commonly used, and they form a ladder &mdash; each one harder than the last, and each one worth more.</p>
+      <div class="quad">
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Descriptive</b></span>
+          <span class="quad__short">what happened</span>
+          <span class="quad__long">Counts, averages, and frequency patterns. <code>SELECT COUNT(*)</code> and <code>GROUP BY</code> live here &mdash; the plainest questions, and the ones every analysis starts with.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Diagnostic</b></span>
+          <span class="quad__short">why it happened</span>
+          <span class="quad__long">Comparisons and drill-downs. Not just &ldquo;sales fell&rdquo; but &ldquo;sales fell in one region, among one product line, after one date.&rdquo;</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Predictive</b></span>
+          <span class="quad__short">what may happen next</span>
+          <span class="quad__long">Forecasts and regression models. This is where analysis stops summarizing the past and starts making claims about data that does not exist yet.</span>
+        </button>
+        <button class="quad__cell" type="button" data-reveal aria-expanded="false">
+          <span class="quad__word"><b>Prescriptive</b></span>
+          <span class="quad__short">what to do about it</span>
+          <span class="quad__long">Recommendations and rule-based decisions. The output is not a number but an action &mdash; raise this price, send this driver here, flag this transaction.</span>
+        </button>
+      </div>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Type</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Question it answers</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Typical output</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Descriptive</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">What happened?</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Counts, averages, frequency patterns</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Diagnostic</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Why did it happen?</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Comparisons and drill-downs</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Predictive</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">What may happen next?</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Forecasts, regression models</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Prescriptive</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">What should we do?</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Recommendations, rule-based decisions</td>
+</tr>
+</tbody></table></div>
+      <p class="callout callout--warn"><strong>Tip:</strong> many SQL queries you already know are examples of descriptive and diagnostic analytics. You have been doing the first two rungs of this ladder since Topic 5 without calling them by these names.</p>
+    </section>
+
+    <!-- ============ 08 LIFECYCLE ============ -->
+    <section id="lifecycle" class="section">
+      <p class="section__num">08</p>
+      <h2>The Data Analytics Lifecycle</h2>
+      <p>The analytics lifecycle shows the flow of activities involved in turning raw data into insights. Each step has a specific purpose, and the steps often loop back as new questions arise.</p>
+      <div class="accordion">
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">1</span><span class="acc__title">Business understanding</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Define the question or goal. <strong>What decision needs support?</strong> An analysis that cannot name the decision it serves will produce numbers nobody uses.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">2</span><span class="acc__title">Data collection</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Gather data from logs, APIs, databases, or uploaded files &mdash; wherever the evidence for that question actually lives.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">3</span><span class="acc__title">Data cleaning and preparation</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Fix missing values, formats, errors, duplicates, and noise. Unglamorous, and usually the largest share of the work.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">4</span><span class="acc__title">Exploratory data analysis</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Look for patterns, outliers, distributions, and trends &mdash; before committing to any particular answer. This is what the hands-on activity below is.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">5</span><span class="acc__title">Modeling / SQL analysis</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Use queries or models to answer the question that step 1 defined.</p></div>
+        </div>
+        <div class="acc">
+          <button class="acc__head" type="button" aria-expanded="false">
+            <span class="acc__n">6</span><span class="acc__title">Evaluation and communication</span><span class="acc__chev" aria-hidden="true"></span>
+          </button>
+          <div class="acc__body"><p>Summarize the findings and explain what the results mean. A result nobody can act on has not finished the lifecycle &mdash; and the explanation often raises a new question, which sends you back to step 1.</p></div>
+        </div>
+      </div>
+      <p class="callout callout--note"><strong>Note:</strong> this lesson focuses on <strong>steps 3 to 5</strong>, because these are the core skills you will practise most often when exploring and analyzing data using SQL.</p>
+    </section>
+
+    <!-- ============ 09 ACTIVITY ============ -->
+    <section id="activity" class="section">
+      <p class="section__num">09</p>
+      <h2>Hands-on Activity: Exploring Patterns with SQL</h2>
+      <p>This activity demonstrates how analysts explore a dataset using SQL. You will run summary queries, identify outliers, and look for patterns across time. The dataset has <strong>200 rows</strong>, so the patterns are clear and meaningful without being hidden in noise.</p>
+      <p>Open the SQLite playground: <a href="https://db-book.com/university-lab-dir/sqljs.html">Execute SQL Online</a>.</p>
+
+      <h3 class="sub">Step 1 &middot; Load the dataset</h3>
+      <p>First create the <code>Trips</code> table:</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">CREATE TABLE Trips(
+    trip_id INTEGER PRIMARY KEY,
+    pickup_time TEXT,
+    distance_km REAL,
+    fare_amount REAL,
+    payment_type TEXT
+);</pre>
+      <p>Then load the 200 records. The insert is kept behind a toggle so the page stays readable &mdash; switch to it, copy it, and run it.</p>
+      <div class="toggle" role="tablist" aria-label="Data inserts">
+        <button class="toggle__btn is-on" type="button" role="tab" aria-selected="true" data-panel="ins-hide">Hide inserts</button>
+        <button class="toggle__btn" type="button" role="tab" aria-selected="false" data-panel="ins-show">Show the 200-row insert</button>
+      </div>
+      <div class="panel" id="ins-hide">
+        <p class="panel__lede">The insert is one recursive CTE that generates 200 trips &mdash; rush-hour clusters in the morning and evening, a late-night bump, four payment types in uneven proportions, and a handful of very short trips.</p>
+        <p class="panel__use">Switch tabs when you are ready to copy it.</p>
+      </div>
+      <div class="panel is-hidden" id="ins-show">
+        <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">step 1 &middot; 200 generated trips</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">WITH RECURSIVE seq(i) AS (
+    SELECT 1 UNION ALL SELECT i+1 FROM seq WHERE i &lt; 200
+),
+calc AS (
+    SELECT
+        i,
+        printf('2025-03-%02d %02d:%02d:00',
+               (i % 28) + 1,
+               CASE
+                   WHEN i % 10 IN (0,1,2) THEN 7  + (i % 3)
+                   WHEN i % 10 IN (3,4,5) THEN 17 + (i % 3)
+                   WHEN i % 10 IN (6,7)   THEN 12 + (i % 2)
+                   WHEN i % 10 = 8        THEN 22 + (i % 2)
+                   ELSE (i * 7) % 24
+               END,
+               (i * 13) % 60) AS pickup_time,
+        CASE
+            WHEN i % 25 = 0 THEN ROUND(0.3 + (i % 7) * 0.1, 1)
+            ELSE ROUND(1.5 + ((i * 37) % 220) / 10.0, 1)
+        END AS distance_km,
+        CASE
+            WHEN i % 10 IN (0,1,2)   THEN 'Cash'
+            WHEN i % 10 IN (3,4,5,6) THEN 'Card'
+            WHEN i % 10 IN (7,8)     THEN 'E-Wallet'
+            ELSE 'Voucher'
+        END AS payment_type
+    FROM seq
+)
+INSERT INTO Trips (trip_id, pickup_time, distance_km, fare_amount, payment_type)
+SELECT i, pickup_time, distance_km,
+       ROUND(45 + distance_km * 12 + ((i * 17) % 40), 2),
+       payment_type
+FROM calc;</pre>
+        <p class="panel__use">Run this immediately after the <code>CREATE TABLE</code> above. It inserts all 200 rows in one statement.</p>
+      </div>
+      <p class="hint">This builds a moderately sized dataset so that summary statistics and patterns become clear &mdash; the kind of dataset analysts explore before scaling up to a Big Data environment.</p>
+
+      <h3 class="sub">Step 2 &middot; Generate basic summaries</h3>
+      <p>These <strong>descriptive</strong> queries establish the size and overall distribution of the dataset. Analysts always begin with counts, averages, and category frequencies.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">-- How many trips in total?
+SELECT COUNT(*) AS total_trips FROM Trips;
+
+-- How are the payment types distributed?
+SELECT payment_type, COUNT(*) AS ct
+FROM Trips
+GROUP BY payment_type;
+
+-- What does a typical trip look like?
+SELECT ROUND(AVG(distance_km), 2) AS avg_distance,
+       ROUND(AVG(fare_amount), 2) AS avg_fare
+FROM Trips;</pre>
+      <p>You should see how many rows exist, how the payment types are distributed, and what a typical journey length and fare look like. These first summaries tell you the <em>shape</em> of the data before you ask anything harder of it.</p>
+
+      <h3 class="sub">Step 3 &middot; Identify outliers</h3>
+      <p>Next, check for unusual or extreme values. Outliers can distort averages, and may signal errors, special conditions, or rare patterns worth examining.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT trip_id, distance_km, fare_amount,
+       ROUND(fare_amount / distance_km, 2) AS fare_per_km
+FROM Trips
+WHERE distance_km &gt; 0
+ORDER BY fare_per_km DESC
+LIMIT 10;</pre>
+      <p>Trips with very short distances produce unusually high <code>fare_per_km</code> values, because a fixed flagdown charge is spread over very little distance. These are natural outliers and appear early in almost every real dataset. <strong>What do you observe in the result?</strong> Compare the top rows against the typical value and ask whether they are errors, or simply short trips behaving exactly as the pricing rule says they should.</p>
+
+      <h3 class="sub">Step 4 &middot; Explore time-based patterns</h3>
+      <p>Many real datasets contain natural cycles &mdash; rush hours, peak demand, quiet intervals. Grouping by hour lets you see when activity is highest.</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT
+    substr(pickup_time, 12, 2) AS hour,
+    COUNT(*) AS trips,
+    ROUND(AVG(fare_amount), 2) AS avg_fare
+FROM Trips
+GROUP BY hour
+ORDER BY trips DESC;</pre>
+      <p>Times of day with high trip counts may correspond to commute hours or late-night activity. The average fare per hour might show when trips tend to be longer or more expensive. Notice that this query is <strong>diagnostic</strong>, not merely descriptive: it does not just count trips, it groups them in a way designed to explain <em>when</em> demand happens.</p>
+
+      <h3 class="sub">Step 5 &middot; Reflect on scaling up</h3>
+      <p>Now imagine this dataset had <strong>20 million rows</strong> instead of 200. Your SQL would be the same, but the performance and infrastructure requirements would not.</p>
+      <ul class="list">
+        <li>The <strong>logic</strong> of the analysis stays the same.</li>
+        <li>The <strong>volume</strong> becomes too large for a single machine.</li>
+        <li>Distributed systems such as Spark or BigQuery would be required to compute results quickly.</li>
+        <li>The <strong>patterns</strong> you identified in this smaller dataset still matter at scale.</li>
+      </ul>
+      <p class="callout callout--warn">This is the moment the lesson turns. You should begin to see why Big Data tools exist &mdash; <strong>SQL does not disappear. The system scales out</strong> to handle a much larger dataset, and your query goes with it.</p>
+    </section>
+
+    <!-- ============ 10 CASE STUDY ============ -->
+    <section id="casestudy" class="section">
+      <p class="section__num">10</p>
+      <h2>Case Study: From a Small Trips Table to a Real System</h2>
+      <p>To understand why Big Data tools exist, it helps to watch a real system grow. We begin with a small ride-hailing dataset much like the one you just used.</p>
+
+      <h3 class="sub">Phase 1 &middot; The startup stage</h3>
+      <p>A small transport startup collects a few hundred trip records per day. An analyst uses SQLite on a laptop to compute average fares, busy hours, and the distribution of payment types &mdash; precisely the three queries from the activity. Every query runs quickly, because the whole dataset fits in memory.</p>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">phase 1</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">Small Data (fits on one machine)
+--------------------------------
+  Storage:     single SQLite file
+  Processing:  one laptop CPU
+  Output:      simple summaries and charts</pre>
+
+      <h3 class="sub">Phase 2 &middot; Growth and new challenges</h3>
+      <p>After a year the company expands to several cities, and trip volume reaches hundreds of thousands of rides per day. The analyst notices:</p>
+      <ul class="list">
+        <li>Queries that used to run in seconds now take minutes;</li>
+        <li>The SQLite file becomes too large to copy easily;</li>
+        <li>Time-based aggregates require scanning millions of rows.</li>
+      </ul>
+      <p>The team migrates to a relational database server with better indexing and more memory. <strong>This works for a while, but it will not work forever.</strong></p>
+
+      <h3 class="sub">Phase 3 &middot; The system becomes Big Data</h3>
+      <p>The company expands nationwide, and millions of trips are recorded daily. Each trip now carries GPS traces, JSON metadata, text feedback, and device and network logs &mdash; all three Vs at once. A single database server can no longer keep up:</p>
+      <ul class="list">
+        <li>Daily reports take hours to compute;</li>
+        <li><code>GROUP BY</code> queries exceed memory limits;</li>
+        <li>Real-time dashboards lag behind actual activity;</li>
+        <li>Storage requirements exceed a single machine.</li>
+      </ul>
+
+      <h3 class="sub">Phase 4 &middot; Redesigning the architecture</h3>
+      <p>The engineering team adopts tools that answer each of the three Vs directly:</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">The V</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">What they adopted</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Volume</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Distributed storage such as S3 or HDFS</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Velocity</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Streaming ingestion with Kafka</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Variety</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Flexible formats for structured and semi-structured data</td>
+</tr>
+</tbody></table></div>
+      <p style="font-family:var(--mono); font-size:.66rem; letter-spacing:.1em; text-transform:uppercase; color:var(--maroon); margin:0 0 .45rem;">phase 4</p><pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">Big Data Architecture
+---------------------
+  Streaming ingest:  Kafka
+  Storage:           S3 or HDFS
+  Processing:        Spark SQL or Hive
+  Analytics:         BigQuery, Databricks</pre>
+
+      <h3 class="sub">Phase 5 &middot; What the analyst sees</h3>
+      <p>Although every tool beneath them has changed, the analyst still writes a familiar query:</p>
+      <pre style="font-family:var(--mono); font-size:.78rem; line-height:1.7; background:var(--card); border:1px solid var(--rule); border-radius:var(--r); padding:1rem 1.1rem; margin:0 0 1.2rem; overflow-x:auto;">SELECT hour, AVG(fare_amount)
+FROM trips
+GROUP BY hour;</pre>
+      <p class="callout callout--note"><strong>Key takeaway:</strong> SQL does not disappear in Big Data systems. The same query logic applies. Big Data tools simply distribute the work across many machines, so that the same questions can be answered at a much larger scale.</p>
+    </section>
+
+    <!-- ============ 11 SKILLS & TRADEOFFS ============ -->
+    <section id="tradeoffs" class="section">
+      <p class="section__num">11</p>
+      <h2>Skills, Tradeoffs, and DBMS Connections</h2>
+
+      <h3 class="sub">What analysts do in Big Data workflows</h3>
+      <p>As data grows, the analyst&rsquo;s role stays rooted in the same skills you used in the activity. What changes is the scale of the data and the tools needed to process it.</p>
+      <ul class="list">
+        <li>Write SQL and analytic queries on very large datasets;</li>
+        <li>Check data quality, inconsistencies, and anomalous values;</li>
+        <li>Summarize patterns across millions or billions of rows;</li>
+        <li>Create automated pipelines that run analyses repeatedly;</li>
+        <li>Collaborate with engineers to access distributed storage and computation.</li>
+      </ul>
+      <p class="callout callout--warn">The core skill remains <strong>the ability to reason about data.</strong> Every tool on this page will be replaced within a decade; that one will not.</p>
+
+      <h3 class="sub">Limitations of Big Data tools</h3>
+      <p>Big Data platforms solve scaling problems, but they introduce new ones.</p>
+      <ul class="list">
+        <li>Higher operational complexity and system maintenance;</li>
+        <li><strong>Eventual consistency</strong> instead of strict ACID guarantees;</li>
+        <li>Higher storage and compute costs;</li>
+        <li>A need for specialized technical skills;</li>
+        <li>Unnecessary overhead when datasets are small.</li>
+      </ul>
+      <p class="callout callout--note"><strong>Reminder:</strong> use Big Data tools only when scale or complexity requires them. For many workloads, a relational DBMS remains the simplest and most effective solution.</p>
+
+      <h3 class="sub">Connecting Big Data back to this course</h3>
+      <p>Big Data systems build on ideas from the earlier lessons rather than discarding them.</p>
+      <div style="overflow-x:auto;">
+<table style="width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--rule); border-radius:var(--r);">
+<thead><tr>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">Idea from earlier</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">In a relational DBMS</th>
+<th style="text-align:left; padding:.55rem .75rem; border-bottom:1px solid var(--rule); font-family:var(--mono); font-size:.64rem; letter-spacing:.09em; text-transform:uppercase; color:var(--maroon); vertical-align:bottom;">In a Big Data system</th>
+</tr></thead><tbody>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Indexing</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">A single-node index locates rows without a full scan.</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Data is <strong>partitioned</strong> across machines and queries run in parallel.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>Normalization</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Normalize for clean design and no redundancy.</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Pipelines often <strong>denormalize</strong> &mdash; wide tables or JSON &mdash; for faster reads.</td>
+</tr>
+<tr>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top; font-weight:600; white-space:nowrap;"><b>ACID</b></td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Strict ACID transactions are the guarantee.</td>
+<td style="padding:.6rem .75rem; border-bottom:1px solid var(--rule-soft); font-size:.93rem; line-height:1.5; vertical-align:top;">Distributed systems take <strong>CAP</strong> tradeoffs for fault tolerance and scale.</td>
+</tr>
+</tbody></table></div>
+      <p>These connections tell you when a traditional DBMS is ideal and when a distributed system becomes necessary &mdash; which is the judgment this whole course has been building toward.</p>
+
+      <h3 class="sub">Practice</h3>
+      <div class="activity" data-activity="pick"
+           data-ok="Correct. Distributed platforms buy scale with complexity, cost, specialist skill, and weaker consistency guarantees."
+           data-no="Not quite. Big Data tools solve scaling problems; what they cost is operational complexity, money, skill, and strict ACID guarantees.">
+        <p class="activity__prompt">What do you <strong>give up</strong> by moving to a Big Data platform?</p>
+        <div class="chips">
+          <button class="chip" type="button" data-correct="true">Strict ACID guarantees, in favour of eventual consistency</button>
+          <button class="chip" type="button" data-correct="true">Operational simplicity</button>
+          <button class="chip" type="button">The ability to write SQL</button>
+          <button class="chip" type="button" data-correct="true">Low storage and compute costs</button>
+          <button class="chip" type="button">The ability to group and aggregate data</button>
+        </div>
+        <div class="activity__foot">
+          <button class="btn" type="button" data-pick-check>Check answer</button>
+          <button class="btn btn--ghost" type="button" data-pick-reset>Reset</button>
+          <p class="activity__verdict" role="status"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 12 REFLECTION ============ -->
+    <section id="reflection" class="section">
+      <p class="section__num">12</p>
+      <h2>Reflection and Application</h2>
+      <p class="hint">Work out your own answer first, then tap to compare your thinking.</p>
+      <div class="cards">
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Which of the three Vs applies to a dataset you have met?</span>
+          <span class="card__sub">volume, velocity, variety</span>
+          <span class="card__data">Pick a real dataset from your own work or study and test it against all three in turn. Most datasets fail only one &mdash; and knowing <em>which</em> one tells you which part of the architecture you would actually need.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">Which part of your SQL workflow would fail at 1000&times; the data?</span>
+          <span class="card__sub">finding the breaking point</span>
+          <span class="card__data">Walk through your own process step by step: loading, cleaning, joining, aggregating, exporting. Ask which step holds everything in memory at once, and which would simply take a thousand times longer. They are rarely the same step.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">How would you support real-time data arrival?</span>
+          <span class="card__sub">velocity</span>
+          <span class="card__data">Consider what has to happen between an event being generated and a dashboard showing it, and which layer of the architecture absorbs the burst when events arrive faster than they can be processed.</span>
+        </button>
+        <button class="card" type="button" data-reveal aria-expanded="false">
+          <span class="card__title">When is a traditional DBMS still the best choice?</span>
+          <span class="card__sub">the honest answer</span>
+          <span class="card__data">Think about what you would lose: transactions, strict consistency, a schema that catches mistakes, and the ability to run everything on one machine that one person can understand. Then ask how often a workload really needs more than that.</span>
+        </button>
+      </div>
+
+      <h3 class="sub">Going further</h3>
+      <ul class="list">
+        <li>How does the <strong>CAP theorem</strong> influence real system designs?</li>
+        <li>How would the tradeoffs differ between finance and social platforms?</li>
+        <li>How would you design a pipeline for <strong>hourly reporting</strong> on data that arrives <strong>per second</strong>?</li>
+      </ul>
+    </section>
+
+    <!-- ============ SUMMARY ============ -->
+    <section id="summary" class="section section--summary">
+      <p class="section__num">&mdash;</p>
+      <h2>Summary</h2>
+      <ul class="summary">
+        <li><strong>Big Data</strong> means datasets too large, too fast, or too varied for a single relational system &mdash; the three Vs: <strong>volume, velocity, variety.</strong> Any one of them is reason enough.</li>
+        <li>Decide by asking three questions: is it too large for one machine, is it arriving continuously, does it carry many formats? If none apply, <strong>a well-indexed relational database is usually the better choice.</strong></li>
+        <li>A Big Data architecture is layered: sources, a <strong>streaming layer</strong> (Kafka, Pub/Sub), <strong>distributed storage</strong> (S3, HDFS), <strong>distributed computing</strong> (Spark, Hive), and an <strong>analytics layer</strong> (BigQuery, Databricks). Each layer solves a different scaling problem.</li>
+        <li><strong>SQL itself does not change.</strong> What changes is how the system executes it &mdash; the work is split into tasks and run in parallel across machines. The syntax stays similar; performance and scale change, not logic.</li>
+        <li>Analytics comes in four kinds: <strong>descriptive</strong> (what happened), <strong>diagnostic</strong> (why), <strong>predictive</strong> (what may happen next), and <strong>prescriptive</strong> (what to do). Most SQL you already write is the first two.</li>
+        <li>The <strong>analytics lifecycle</strong> runs from business understanding through collection, cleaning, exploration, modeling, and communication &mdash; and loops back as new questions arise.</li>
+        <li>In the activity, descriptive and diagnostic queries revealed the dataset&rsquo;s shape, its outliers, and its daily cycle. <strong>The same queries would answer the same questions at a million times the size.</strong></li>
+        <li>Big Data tools cost something: operational complexity, <strong>eventual consistency instead of strict ACID</strong>, higher storage and compute bills, specialist skills, and pure overhead on small datasets.</li>
+        <li>They build on this course rather than replacing it &mdash; <strong>indexing</strong> becomes partitioning and parallelism, <strong>normalization</strong> often gives way to wide tables and JSON, and <strong>ACID</strong> gives way to the CAP tradeoffs.</li>
+      </ul>
+      <p class="callout callout--warn"><strong>Key message:</strong> Big Data does not replace relational databases. Each system has strengths. The real skill is choosing the right tool for the workload.</p>
+    </section>
+
+    <!-- ============ CHECK YOUR UNDERSTANDING ============ -->
+    <section id="check" class="section section--check">
+      <p class="section__num">&#10003;</p>
+      <h2>Check Your Understanding</h2>
+      <p class="check__intro">Ten items on everything above. You&rsquo;ll get feedback on each answer as you go &mdash; this is practice, not a graded quiz.</p>
+
+      <div class="quiz" id="quiz">
+        <div class="quiz__meter">
+          <p class="quiz__count"><span id="quizPos">1</span> of <span id="quizTotal">10</span></p>
+          <div class="quiz__track"><div class="quiz__fill" id="quizFill"></div></div>
+        </div>
+        <div id="quizBody"></div>
+        <div class="quiz__nav">
+          <button class="btn btn--ghost" type="button" id="quizPrev">Back</button>
+          <button class="btn" type="button" id="quizNext">Next</button>
+        </div>
+      </div>
+
+      <div class="result is-hidden" id="quizResult" role="status">
+        <p class="result__score"><span id="scoreVal">0</span><small id="scoreOut">/10</small></p>
+        <p class="result__msg" id="scoreMsg"></p>
+        <ul class="result__list" id="scoreList"></ul>
+        <button class="btn" type="button" id="quizRetry">Try again</button>
+      </div>
+    </section>
+
+    <nav class="pager" aria-label="Lesson navigation">
+      <a href="Topic8.html">&larr; Topic 8</a>
+      <a class="pager__menu" href="../index.html">Menu</a>
+      <span class="pager__spacer"></span>
+    </nav>
+
+    <footer class="foot">
+      <p>Adapted from <strong>CMSC 206 &mdash; Database Management Systems</strong>, &ldquo;Big Data and Data Analytics,&rdquo; 1S AY 2025&ndash;2026. University of the Philippines Open University, Faculty of Information and Communication Studies.</p>
+      <p class="foot__note">Practice environment: db-book.com online SQL playground. The 200-row Trips dataset is generated by the recursive CTE in Step 1.</p>
+    </footer>
+
+  </main>
+</div>
+
+<!-- ===== Check Your Understanding: question bank ===== -->
+<script type="application/json" id="quizData">
+[
+  {
+    "stem": "Which three characteristics are used to describe Big Data?",
+    "options": [
+      "Volume, velocity, variety",
+      "Volume, validity, visibility",
+      "Variety, veracity, value",
+      "Velocity, volatility, verification"
+    ],
+    "answer": 0,
+    "why": "Big Data is commonly described through the three Vs: <strong>volume</strong> (how much), <strong>velocity</strong> (how fast it arrives), and <strong>variety</strong> (how many formats it takes)."
+  },
+  {
+    "stem": "A dataset is only a few gigabytes, but events arrive continuously at thousands per second. Does it need Big Data tools?",
+    "options": [
+      "No &mdash; Big Data is defined by size alone",
+      "Yes &mdash; any one of the three Vs is enough to make the case",
+      "No &mdash; velocity is handled automatically by indexing",
+      "Only if the data also arrives in several formats"
+    ],
+    "answer": 1,
+    "why": "If <strong>one or more</strong> of the three Vs applies, a Big Data solution may be more suitable. A dataset does not have to be enormous if it arrives fast enough &mdash; this one fails the <strong>velocity</strong> test."
+  },
+  {
+    "stem": "In a Big Data architecture, which layer absorbs thousands of events per second as they are generated?",
+    "options": [
+      "Distributed storage (S3 / HDFS)",
+      "Distributed computing (Spark / Hive)",
+      "The streaming layer (Kafka / Pub/Sub)",
+      "The analytics layer (BigQuery / Databricks)"
+    ],
+    "answer": 2,
+    "why": "The <strong>streaming layer</strong> takes every event immediately and holds thousands per second without losing them. Storage keeps the history, computing processes it, and the analytics layer is where queries are written."
+  },
+  {
+    "stem": "What actually changes about your SQL when a query runs on a distributed Big Data system?",
+    "options": [
+      "The syntax must be rewritten into a distributed dialect",
+      "Nothing about the SQL &mdash; what changes is how the system executes it",
+      "SQL is replaced by MapReduce code",
+      "Joins and GROUP BY are no longer available"
+    ],
+    "answer": 1,
+    "why": "SQL itself does not change. The system divides the query into smaller tasks and runs them <strong>in parallel</strong> across many machines. The syntax remains similar &mdash; what changes is performance and scale, not logic."
+  },
+  {
+    "stem": "An analyst runs SELECT payment_type, COUNT(*) FROM Trips GROUP BY payment_type. What kind of analytics is this?",
+    "options": ["Descriptive", "Diagnostic", "Predictive", "Prescriptive"],
+    "answer": 0,
+    "why": "This is <strong>descriptive</strong> analytics &mdash; it describes what happened, using counts and frequency patterns. A diagnostic query would go further and compare groups to explain <em>why</em> the pattern looks as it does."
+  },
+  {
+    "stem": "Which type of analytics produces an action rather than a number?",
+    "options": ["Descriptive", "Diagnostic", "Predictive", "Prescriptive"],
+    "answer": 3,
+    "why": "<strong>Prescriptive</strong> analytics suggests what actions to take &mdash; recommendations and rule-based decisions. Predictive analytics estimates what may happen next, but stops short of saying what to do about it."
+  },
+  {
+    "stem": "Which steps of the analytics lifecycle does this lesson concentrate on?",
+    "options": [
+      "Steps 1 to 3 &mdash; business understanding, collection, cleaning",
+      "Steps 3 to 5 &mdash; cleaning, exploration, and SQL analysis",
+      "Step 6 alone &mdash; evaluation and communication",
+      "All six equally"
+    ],
+    "answer": 1,
+    "why": "The lesson focuses on <strong>steps 3 to 5</strong> &mdash; data cleaning and preparation, exploratory data analysis, and modeling or SQL analysis &mdash; because these are the core skills practised most often when exploring data with SQL."
+  },
+  {
+    "stem": "In the activity, trips of 0.3 to 0.9 km show a far higher fare_per_km than the rest. What is the most likely explanation?",
+    "options": [
+      "The data is corrupt and those rows should be deleted",
+      "A fixed flagdown charge is spread over very little distance",
+      "Short trips are always billed at a premium rate by law",
+      "The GROUP BY is aggregating the wrong column"
+    ],
+    "answer": 1,
+    "why": "A fixed starting charge divided by a very small distance produces a large ratio. These are <strong>natural outliers</strong>, not errors &mdash; which is exactly why an analyst investigates an outlier before discarding it."
+  },
+  {
+    "stem": "Which of these is a genuine cost of moving to a Big Data platform?",
+    "options": [
+      "Losing the ability to express queries in SQL",
+      "Eventual consistency in place of strict ACID guarantees",
+      "Being unable to aggregate or group data",
+      "Needing to abandon everything learned about relational design"
+    ],
+    "answer": 1,
+    "why": "Distributed systems trade strict ACID guarantees for <strong>eventual consistency</strong> in order to get fault tolerance and scale. They also bring operational complexity, higher costs, and a need for specialist skills &mdash; but SQL and relational thinking carry straight over."
+  },
+  {
+    "stem": "How does normalization usually change when moving from a relational system to a Big Data pipeline?",
+    "options": [
+      "Normalization is applied more strictly to save storage",
+      "Pipelines often use wide tables or JSON structures for faster reads",
+      "Normal forms are enforced automatically by the cluster",
+      "Tables are split into more relations to parallelize better"
+    ],
+    "answer": 1,
+    "why": "Relational systems <strong>normalize</strong> for clean design and no redundancy. Big Data pipelines often go the other way &mdash; <strong>denormalized</strong> wide tables or JSON &mdash; because a read that needs no joins is far cheaper to spread across machines."
+  }
+]
+</script>
+
+<script src="../assets/lesson.js"></script>
+</body>
+</html>
